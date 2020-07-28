@@ -5,6 +5,7 @@ from torch.utils.data import Dataset
 from PIL import Image
 from config.defult_config import config
 import numpy as np
+from core.datasets.kitti_utils import 
 
 
 FOLDER = {'left': 'image_02', 
@@ -72,7 +73,7 @@ class KITTI(Dataset):
         data.update({'intrinsics': intrinsics})
         # get pose
         if self.with_pose:
-            data['pose'] = 
+            data['pose'] = self.get_pose(im_pose)
 
     
     @staticmethod
@@ -120,7 +121,7 @@ class KITTI(Dataset):
     
     @staticmethod
     def read_calibration_file(parent_path):
-        file_path = join(parent_path, 'b_cam_to_cam.txt')
+        file_path = join(parent_path, 'calib_cam_to_cam.txt')
         c_data = dict()
         with open(file_path, 'r') as fid:
             for line in fid.readlines():
@@ -139,6 +140,8 @@ class KITTI(Dataset):
                 intrinsics = np.reshape(intrinsics, [3, 4])[:, :4]
                 return intrinsics
      
+
+    def get_pose(im_path):
 
 
 
