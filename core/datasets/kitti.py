@@ -18,10 +18,11 @@ CALIB_FILE = {
 }
 
 class KITTI(Dataset):
-    def __init__(self, data_path, data_file, transform,
+    def __init__(self, data_path, data_file, data_transform=None,
                 with_context=True, with_depth=False, with_pose=False,
                 backward_context=1, forward_context=1, stride=1):
         self.data_path = data_path
+        self.data_transform = data_transform
         self.with_context = with_context
         self.with_depth = with_depth
         self.with_pose = with_pose
@@ -76,7 +77,7 @@ class KITTI(Dataset):
 
     def __getitem__(self, idx):
         im_path = self.im_paths[idx]
-        data = {'image': Image.open(im_path)}
+        data = {'rgb': Image.open(im_path)}
         # get intrinsics
         intrinsics = self.intrinsics_cache[im_path]
         data.update({'intrinsics': intrinsics})
@@ -96,7 +97,7 @@ class KITTI(Dataset):
                 context_poses = [invert_pose_numpy(p) @ current_pose
                                       for p in context_poses]
                 data.update({'pose_context': context_poses})
-        if self.data_transform:
+        if self.data_transform is not None:
             data = self.data_transform(data)
         return data
 
@@ -171,7 +172,7 @@ class KITTI(Dataset):
         for cam in FOLDER.values():
             if cam in im_path:
                 intrinsics = c_data[cam.replace('image', 'P_rect')]
-                intrinsics = np.reshape(intrinsics, [3, 4])[:, :4]
+                intrinsics = np.reshape(intrinsics, [3, 4])[:, :3]
                 self.intrinsics_cache[im_path] = intrinsics
                 return intrinsics
      
@@ -183,18 +184,18 @@ class KITTI(Dataset):
         base_name, ext = os.path.splitext(os.path.basename(im_path))
         origin_frame = join(parent_path, str(0).zfill(len(base_name)) + ext)
         # Get origin data
-        origin_oxts_data = self._get_oxts_data(origin_frame)
+        origin_oxts_data = self.get_oxts_data(origin_frame)
         lat = origin_oxts_data[0]
         scale = np.cos(lat * np.pi / 180.)
         # Get origin pose
         origin_R, origin_t = pose_from_oxts_packet(origin_oxts_data, scale)
         origin_pose = transform_from_rot_trans(origin_R, origin_t)
         # Compute current pose
-        oxts_data = self._get_oxts_data(im_path)
+        oxts_data = self.get_oxts_data(im_path)
         R, t = pose_from_oxts_packet(oxts_data, scale)
         pose = transform_from_rot_trans(R, t)
         # Compute odometry pose
-        imu2cam = self._get_imu2cam_transform(im_path, join(parent_path, '../../../'))
+        imu2cam = self.get_imu2cam_transform(im_path, join(parent_path, '../../../'))
         odo_pose = (imu2cam @ np.linalg.inv(origin_pose) @
                     pose @ np.linalg.inv(imu2cam)).astype(np.float32)
         # Cache and return pose
@@ -202,7 +203,7 @@ class KITTI(Dataset):
         return odo_pose
 
     @staticmethod
-    def _get_oxts_file(image_file):
+    def get_oxts_file(image_file):
         """Gets the oxts file from an image file."""
         # find oxts pose file
         for cam in FOLDER.values():
@@ -212,9 +213,9 @@ class KITTI(Dataset):
         # Something went wrong (invalid image file)
         raise ValueError('Invalid KITTI path for pose supervision.')
 
-    def _get_oxts_data(self, image_file):
+    def get_oxts_data(self, image_file):
         """Gets the oxts data from an image file."""
-        oxts_file = self._get_oxts_file(image_file)
+        oxts_file = self.get_oxts_file(image_file)
         if oxts_file in self.oxts_cache:
             oxts_data = self.oxts_cache[oxts_file]
         else:
@@ -223,7 +224,7 @@ class KITTI(Dataset):
         return oxts_data
 
         
-    def _get_imu2cam_transform(self, image_file, parent_folder):
+    def get_imu2cam_transform(self, image_file, parent_folder):
         """Gets the transformation between IMU an camera from an image file"""
         #if image_file in self.imu2velo_calib_cache:
         #    return self.imu2velo_calib_cache[image_file]
