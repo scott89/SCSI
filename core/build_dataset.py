@@ -31,6 +31,7 @@ def build_dataset(phase):
     dataset = DataLoader(dataset, 
                          batch_size = batch_size,
                          num_workers = config.dataset.num_workers,
+                         pin_memory = True,
                          shuffle = phase=='train'
                         )
     return dataset

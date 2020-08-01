@@ -202,10 +202,10 @@ class ResNet(nn.Module):
         # See note [TorchScript super()]
         x = self.conv1(x)
         x = self.bn1(x)
-        x = self.relu(x)
-        x = self.maxpool(x)
+        conv1 = self.relu(x)
+        poo1 = self.maxpool(conv1)
 
-        res2 = self.layer1(x)
+        res2 = self.layer1(poo1)
         res3 = self.layer2(res2)
         res4 = self.layer3(res3)
         res5 = self.layer4(res4)
@@ -214,7 +214,7 @@ class ResNet(nn.Module):
         #x = torch.flatten(x, 1)
         #x = self.fc(x)
 
-        return [res2, res3, res4, res5]
+        return [conv1, res2, res3, res4, res5]
 
     def forward(self, x):
         return self._forward_impl(x)

@@ -44,13 +44,19 @@ class Resize(object):
         return data
 
 class ToTensor(object):
-    def __init__(self, dtype=torch.float32):
+    def __init__(self, data_format, dtype=torch.float32):
+        assert data_format in ['RGB', 'BGR']
+        self.data_format = data_format
         self.to_tensor = T.ToTensor()
         self.dtype = dtype
     def __call__(self, data):
         data['rgb'] = self.to_tensor(data['rgb']).type(self.dtype)
         data['rgb_context'] = [self.to_tensor(r).type(self.dtype) 
                               for r in data['rgb_context']]
+        if self.data_format == 'BGR':
+            data['rgb'] = data['rgb'][-1::-1]
+            data['rgb_context'] = [r[-1::-1] for r in data['rgb_context']]
+
         if 'depth' in data.keys():
             data['depth'] = self.to_tensor(data['depth'])
         return data
@@ -71,7 +77,7 @@ class Transform(object):
             transforms.append(ColorJittering(*config.jittering))
         if 'image_shape' in config.keys():
             transforms.append(Resize(config.image_shape))
-        transforms.append(ToTensor())
+        transforms.append(ToTensor(config.format))
         transforms.append(Normalize(config.mean, config.std))
         self.transforms = T.Compose(transforms)
     def __call__(self, data):
