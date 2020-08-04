@@ -100,10 +100,6 @@ class KITTI(Dataset):
         if self.data_transform is not None:
             data = self.data_transform(data)
         return data
-
-
-
-
     
     @staticmethod
     def read_depth(depth_path):
