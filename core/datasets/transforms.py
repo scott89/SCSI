@@ -1,4 +1,5 @@
 import torch
+import re
 import cv2
 import random
 import numpy as np
@@ -69,14 +70,27 @@ class Normalize(object):
         data['rgb_context'] = [self.normalize(r) for r in data['rgb_context']]
         return data
 
+class Duplicate(object):
+    def __init__(self, pre='rgb'):
+        self.pre = pre
+    def __call__(self, data):
+        for k in data:
+            if re.match(self.pre, k):
+                if isinstance(data[k], np.ndarray):
+                    data[k+'_original'] = data[k].copy()
+                elif isinstance(data[k], list):
+                    data[k+'_original'] = [v.copy() for v in data[k]]
+        return data
+
 
 class Transform(object):
     def __init__(self, config):
         transforms = []
-        if 'jittering' in config.keys():
-            transforms.append(ColorJittering(*config.jittering))
         if 'image_shape' in config.keys():
             transforms.append(Resize(config.image_shape))
+        transforms.append(Duplicate())
+        if 'jittering' in config.keys():
+            transforms.append(ColorJittering(*config.jittering))
         transforms.append(ToTensor(config.format))
         transforms.append(Normalize(config.mean, config.std))
         self.transforms = T.Compose(transforms)
