@@ -21,7 +21,7 @@ config.input.mean = [0.485, 0.456, 0.406]
 config.input.std = [0.229, 0.224, 0.225]
 config.input.format = 'RGB' 
 # for ResNet with GN
-config.input.mean = [[103.530/255, 116.280/255, 123.675/255]]
+config.input.mean = [103.530/255, 116.280/255, 123.675/255]
 config.input.std = [1.0/255, 1.0/255, 1.0/255]
 config.input.format = 'BGR' 
 

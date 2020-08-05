@@ -157,7 +157,7 @@ class KITTI(Dataset):
             for line in fid.readlines():
                 key, value = line.split(':', 1)
                 try:
-                    c_data[key] = np.array([float(i) for i in value.split()])
+                    c_data[key] = np.array([float(i) for i in value.split()], dtype=np.float32)
                 except ValueError:
                     pass
         return c_data
