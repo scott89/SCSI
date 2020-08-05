@@ -10,8 +10,7 @@ NORMS = {
 
 class DispNet(nn.Module):
     def __init__(self, norm_layer='BN'):
-        super(ResBlock, self).__init__()
-        self.flip_prob = flip_prob
+        super(DispNet, self).__init__()
         norm_layer = NORMS[norm_layer]
         self.encoder = resnet50(norm_layer=norm_layer)
         self.decoder = DispDecoder(norm_layer=norm_layer) 

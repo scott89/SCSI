@@ -23,7 +23,7 @@ class Conv2D(nn.Module):
     def __init__(self, in_channels, out_channels, k_size, padding, stride=1, bias=True, norm_layer=None, activ=None):
         super(Conv2D, self).__init__()
         ops = []
-        conv = nn.Conv2d(in_channels, out_channels, k_size, stride=strid, padding=padding, bias=bias) 
+        conv = nn.Conv2d(in_channels, out_channels, k_size, stride=stride, padding=padding, bias=bias) 
         ops.append(conv)
         if norm_layer is not None:
             norm = norm_layer(out_channels)
@@ -52,7 +52,6 @@ class DispDecoder(nn.Module):
         super(DispDecoder, self).__init__()
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
-        self.phase = phase
         self.dec4 = ResBlock(2048, 1024, norm_layer)
         self.dec3 = ResBlock(1024, 512, norm_layer)
         self.dec2 = ResBlock(512, 256, norm_layer)

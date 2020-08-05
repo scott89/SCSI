@@ -3,24 +3,27 @@ import torch.nn as nn
 import torch.nn.functional as F
 from .disp_decoder import ResBlock
 
+NORMS = {
+    'BN': nn.BatchNorm2d,
+    'GN': lambda num_channels: nn.GroupNorm(32, num_channels)
+}
 
 class PoseNet(nn.Module):
-    def __init__(self, num_ref=2, norm_layer=None):
+    def __init__(self, num_ref=2, norm_layer='BN'):
         super().__init__()
         self.num_ref = num_ref
-        if norm_layer is None:
-            norm_layer = nn.BatchNorm2d
+        norm_layer = NORMS[norm_layer]
         nc = [16, 32, 64, 128, 256, 256, 256]
         self.res1=ResBlock((num_ref+1)*3, nc[0], norm_layer, stride=2)
-        self.res2=ResBlock(nc[0], cn[1], norm_layer, stride=2)
-        self.res3=ResBlock(nc[1], cn[2], norm_layer, stride=2)
-        self.res4=ResBlock(nc[2], cn[3], norm_layer, stride=2)
-        self.res5=ResBlock(nc[3], cn[4], norm_layer, stride=2)
-        self.res6=ResBlock(nc[4], cn[5], norm_layer, stride=2)
-        self.res7=ResBlock(nc[5], cn[6], norm_layer, stride=2)
+        self.res2=ResBlock(nc[0], nc[1], norm_layer, stride=2)
+        self.res3=ResBlock(nc[1], nc[2], norm_layer, stride=2)
+        self.res4=ResBlock(nc[2], nc[3], norm_layer, stride=2)
+        self.res5=ResBlock(nc[3], nc[4], norm_layer, stride=2)
+        self.res6=ResBlock(nc[4], nc[5], norm_layer, stride=2)
+        self.res7=ResBlock(nc[5], nc[6], norm_layer, stride=2)
         self.stem = nn.Sequential(self.res1, self.res2, self.res3, 
                                   self.res4, self.res5, self.res6, self.res7)
-        self.pose_pred = nn.Conv2d(cn[6], 6*self.num_ref, 1)
+        self.pose_pred = nn.Conv2d(nc[6], 6*self.num_ref, 1)
     
     def forward(self, image, context):
         assert(len(context) == self.num_ref)

@@ -9,5 +9,6 @@ def build_network():
     disp_net = DispNet(norm_layer=config.model.norm)
     disp_net = DataParallel(disp_net,device_ids=config.gpu).to(config.gpu[0])
     pose_net = PoseNet(norm_layer=config.model.norm)
+    pose_net = DataParallel(pose_net,device_ids=config.gpu).to(config.gpu[0])
     return disp_net, pose_net
 

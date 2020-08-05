@@ -28,4 +28,5 @@ config.input.format = 'BGR'
 # Model
 config.model = edict()
 config.model.norm = 'GN'
+config.gpu = [0]
 
