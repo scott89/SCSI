@@ -1,10 +1,8 @@
-from config.config import config
 from core.datasets.transforms import Transform
 
 
 
-
-def build_transform(phase='train'):
+def build_transform(config, phase='train'):
     
     if phase == 'train':
         trans_config = config.dataset.train_transform

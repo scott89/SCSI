@@ -1,10 +1,11 @@
-from core.build_dataset import build_dataset
+from core.builders.build_dataset import build_dataset
 from utils.view_synthesis import view_synthesis
 import cv2
 import numpy as np
+from config.config import config
 
 
-kitti = build_dataset('train')
+kitti = build_dataset(config, 'train')
 for data in kitti:
     depth = data['depth']
     img = data['rgb_original']
