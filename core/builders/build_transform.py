@@ -3,7 +3,6 @@ from core.datasets.transforms import Transform
 
 
 
-
 def build_transform(phase='train'):
     
     if phase == 'train':

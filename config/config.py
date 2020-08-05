@@ -14,19 +14,40 @@ config.dataset.train_batchsize = 8
 config.dataset.val_transform = edict()
 config.dataset.val_batchsize = 1
 
-config.input = edict()
-config.input.image_shape = [192, 640]
-# for ResNet with BN
-config.input.mean = [0.485, 0.456, 0.406]
-config.input.std = [0.229, 0.224, 0.225]
-config.input.format = 'RGB' 
-# for ResNet with GN
-config.input.mean = [103.530/255, 116.280/255, 123.675/255]
-config.input.std = [1.0/255, 1.0/255, 1.0/255]
-config.input.format = 'BGR' 
-
 # Model
 config.model = edict()
 config.model.norm = 'GN'
-config.gpu = [0]
+config.model.gpu = [0]
 
+# train
+config.train = edict()
+config.train.resume = False
+config.train.restore_optim = False  
+config.train.snapshot = ''
+config.train.output_path = 'model/'
+if config.model.norm == 'BN':
+    config.train.backbone_model_path = 'models/resnet50.pth'
+elif config.model.norm == 'GN':
+    config.train.backbone_model_path = 'models/R-50-GN.pth'
+else:
+    raise ValueError('Not Implemented %s'%config.model.norm)
+config.train.optim = edict()
+config.train.optim.lr = 0.01
+config.train.optim.weight_decay = 1e-4
+config.train.optim.momentum = 0.9
+
+# Input
+config.input = edict()
+config.input.image_shape = [192, 640]
+if config.model.norm == 'BN':
+    # for ResNet with BN
+    config.input.mean = [0.485, 0.456, 0.406]
+    config.input.std = [0.229, 0.224, 0.225]
+    config.input.format = 'RGB' 
+elif config.model.norm == 'GN':
+    # for ResNet with GN
+    config.input.mean = [103.530/255, 116.280/255, 123.675/255]
+    config.input.std = [1.0/255, 1.0/255, 1.0/255]
+    config.input.format = 'BGR' 
+else:
+    raise ValueError('Not Implemented %s'%config.model.norm)

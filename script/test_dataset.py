@@ -1,4 +1,4 @@
-from core.build_dataset import build_dataset
+from core.builders.build_dataset import build_dataset
 from utils.view_synthesis import view_synthesis
 import cv2
 import numpy as np
