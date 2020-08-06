@@ -17,7 +17,7 @@ config.dataset.val_batchsize = 1
 # Model
 config.model = edict()
 config.model.norm = 'GN'
-config.model.gpu = [0]
+config.model.gpu = [0, 1]
 
 # train
 config.train = edict()
@@ -26,15 +26,17 @@ config.train.restore_optim = False
 config.train.snapshot = ''
 config.train.output_path = 'model/'
 if config.model.norm == 'BN':
-    config.train.backbone_model_path = 'models/resnet50.pth'
+    config.train.backbone_path = 'models/resnet50.pth'
 elif config.model.norm == 'GN':
-    config.train.backbone_model_path = 'models/R-50-GN.pth'
+    config.train.backbone_path = 'models/R-50-GN.pth'
 else:
     raise ValueError('Not Implemented %s'%config.model.norm)
 config.train.optim = edict()
 config.train.optim.lr = 0.01
 config.train.optim.weight_decay = 1e-4
 config.train.optim.momentum = 0.9
+config.train.optim.lr_decay_factor = 0.1
+config.train.optim.lr_decay_epochs = [20, 40]
 
 # Input
 config.input = edict()
