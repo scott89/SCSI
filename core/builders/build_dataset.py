@@ -14,8 +14,8 @@ def build_dataset(config, phase):
     if phase == 'train':
         data_file = config.dataset.train_data_file
         with_context = True
-        with_depth = True
-        with_pose = True
+        with_depth = False
+        with_pose = False
         batch_size = config.dataset.train_batchsize
     elif phase == 'val':
         data_file = config.dataset.val_data_file

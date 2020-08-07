@@ -11,6 +11,7 @@ config.dataset.train_data_file = 'data_splits/eigen_zhou_files.txt'
 config.dataset.train_transform = edict()
 config.dataset.train_transform.jittering = [0.2, 0.2, 0.2, 0.05]
 config.dataset.train_batchsize = 8
+config.dataset.val_data_file = 'data_splits/kitti_val_files.txt'
 config.dataset.val_transform = edict()
 config.dataset.val_batchsize = 1
 
