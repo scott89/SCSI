@@ -32,7 +32,7 @@ elif config.model.norm == 'GN':
 else:
     raise ValueError('Not Implemented %s'%config.model.norm)
 config.train.optim = edict()
-config.train.optim.lr = 0.01
+config.train.optim.lr = 2*1e-4
 config.train.optim.weight_decay = 1e-4
 config.train.optim.momentum = 0.9
 config.train.optim.lr_decay_factor = 0.1
