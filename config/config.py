@@ -18,14 +18,14 @@ config.dataset.val_batchsize = 1
 # Model
 config.model = edict()
 config.model.norm = 'GN'
-config.model.gpu = [0, 1]
+config.model.gpu = [1]
 
 # train
 config.train = edict()
 config.train.resume = False
 config.train.restore_optim = False  
 config.train.snapshot = ''
-config.train.output_path = 'model/'
+config.train.output_path = 'models/'
 if config.model.norm == 'BN':
     config.train.backbone_path = 'models/resnet50.pth'
 elif config.model.norm == 'GN':
@@ -38,6 +38,7 @@ config.train.optim.weight_decay = 1e-4
 config.train.optim.momentum = 0.9
 config.train.optim.lr_decay_factor = 0.1
 config.train.optim.lr_decay_epochs = [20, 40]
+config.train.optim.max_epoch = 60
 
 # Input
 config.input = edict()

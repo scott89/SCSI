@@ -2,10 +2,11 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from .disp_decoder import ResBlock
+from core.geometry.pose_utils import pose_vec2mat
 
 NORMS = {
     'BN': nn.BatchNorm2d,
-    'GN': lambda num_channels: nn.GroupNorm(32, num_channels)
+    'GN': lambda num_channels: nn.GroupNorm(16, num_channels)
 }
 
 class PoseNet(nn.Module):
@@ -13,7 +14,7 @@ class PoseNet(nn.Module):
         super().__init__()
         self.num_ref = num_ref
         norm_layer = NORMS[norm_layer]
-        nc = [16, 32, 64, 128, 256, 256, 256]
+        nc = [32, 32, 64, 128, 256, 256, 256]
         self.res1=ResBlock((num_ref+1)*3, nc[0], norm_layer, stride=2)
         self.res2=ResBlock(nc[0], nc[1], norm_layer, stride=2)
         self.res3=ResBlock(nc[1], nc[2], norm_layer, stride=2)
@@ -31,8 +32,11 @@ class PoseNet(nn.Module):
         stem = self.stem(x)
         pose = self.pose_pred(stem)
         pose = torch.mean(pose, [2,3])
-        pose = 0.01 * pose.view(pose.size[0], -1, 6)
-        return pose
+        #pose = 0.01 * pose.view(pose.shape[0], -1, 6)
+        pose = 0.01 * pose.view(-1, 6)
+        pose_mat = pose_vec2mat(pose)
+        pose_mat = pose_mat.view(-1, self.num_ref, 3, 4)
+        return pose_mat
 
         
 

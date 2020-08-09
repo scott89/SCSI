@@ -49,8 +49,8 @@ def build_optimizer(config, disp_net, pose_net):
     learnable_layers = [nn.Conv2d, nn.Linear]
     disp_weight = get_params(disp_net, learnable_layers, '', ['weight'])
     disp_bias = get_params(disp_net, learnable_layers, '', ['bias'])
-    pose_weight = get_params(disp_net, learnable_layers, '', ['weight'])
-    pose_bias = get_params(disp_net, learnable_layers, '', ['bias'])
+    pose_weight = get_params(pose_net, learnable_layers, '', ['weight'])
+    pose_bias = get_params(pose_net, learnable_layers, '', ['bias'])
     params = [
         {'params': disp_norm[1], 'lr': lr},
         {'params': pose_norm[1], 'lr': lr},
