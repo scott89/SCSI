@@ -44,10 +44,13 @@ def SSIM(x, y, C1=1e-4, C2=9e-4, kernel_size=3, stride=1):
     ssim_d = (mu_x_sq + mu_y_sq + C1) * v2
     ssim = ssim_n / ssim_d
     ssim = torch.clamp((1 - ssim)/2, 0, 1)
+    ssim = ssim.mean(1)
     return ssim
 
 def l1_loss(x, y):
-    return torch.abs(x - y)
+    l1 = torch.abs(x - y)
+    l1 = l1.mean(1)
+    return l1
 
 def perceptual_loss(img, img_ref, disp, pose, K, alpha=0.85):
     '''
@@ -71,7 +74,6 @@ def perceptual_loss(img, img_ref, disp, pose, K, alpha=0.85):
             l1_s.append(l1_loss(img, img_ref[ic]))
         ssim.append(ssim_s)
         l1.append(l1_s)
-            
     ssim = [torch.min(torch.stack(s, 1), 1)[0] for s in ssim]
     ssim = sum([torch.mean(s) for s in ssim]) / len(ssim)
     l1 = [torch.min(torch.stack(l, 1), 1)[0] for l in l1]
