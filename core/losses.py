@@ -43,7 +43,7 @@ def SSIM(x, y, C1=1e-4, C2=9e-4, kernel_size=3, stride=1):
     ssim_n = (2 * mu_x_mu_y + C1) * v1
     ssim_d = (mu_x_sq + mu_y_sq + C1) * v2
     ssim = ssim_n / ssim_d
-
+    ssim = torch.clamp((1 - ssim)/2, 0, 1)
     return ssim
 
 def l1_loss(x, y):
@@ -77,7 +77,7 @@ def perceptual_loss(img, img_ref, disp, pose, K, alpha=0.85):
     l1 = [torch.min(torch.stack(l, 1), 1)[0] for l in l1]
     l1 = sum([torch.mean(l) for l in l1]) / len(l1)
     perc_loss = alpha * ssim + (1-alpha) * l1
-    return perc_loss
+    return perc_loss, ssim, l1
 
 def smoothness_loss(disp, image, smooth_loss_weight):
     smoothness_x, smoothness_y = calc_smoothness(disp, image)
@@ -87,14 +87,14 @@ def smoothness_loss(disp, image, smooth_loss_weight):
 
 
 def calculate_loss(img, img_ref, disp, pose, K, smooth_loss_weight=0.001, perc_loss_weight=0.85):
-    perc_loss = perceptual_loss(img, img_ref, disp, pose, K, perc_loss_weight)
+    perc_loss, ssim, l1 = perceptual_loss(img, img_ref, disp, pose, K, perc_loss_weight)
     loss = perc_loss
     if smooth_loss_weight > 0:
         smooth_loss = smoothness_loss(disp, img, smooth_loss_weight)
         loss += smooth_loss
     else: 
         smooth_loss = 0
-    return loss, perc_loss, smooth_loss
+    return loss, perc_loss, ssim, l1, smooth_loss
 
 
 

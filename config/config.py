@@ -26,6 +26,7 @@ config.train.resume = False
 config.train.restore_optim = False  
 config.train.snapshot = ''
 config.train.output_path = 'models/'
+config.train.display_iter = 1
 if config.model.norm == 'BN':
     config.train.backbone_path = 'models/resnet50.pth'
 elif config.model.norm == 'GN':

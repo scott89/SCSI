@@ -11,17 +11,29 @@ def trainer(config):
     model_restore(disp_net, pose_net, optim, 
                   config.train.resume, config.train.restore_optim,
                   config.train.snapshot, config.train.backbone_path)
-    for epoch in range(config.train.optim.max_epoch):
+    start_epoch = 0
+    start_iter = 0
+    global_iter = start_iter
+    for epoch in range(start_epoch, config.train.optim.max_epoch):
         disp_net.train()
+        pose_net.train()
         for batch in train_dataloader:
             optim.zero_grad()
             batch = sample_to_cuda(batch, config.model.gpu[0])
             disps = disp_net(batch['rgb'], flip_prob=0.5)
             disps = resize(disps, shape=batch['rgb'].shape[2:], mode='bilinear')
             poses = pose_net(batch['rgb'], batch['rgb_context'])
-            loss, perc_loss, smooth_loss = calculate_loss(batch['rgb_original'], batch['rgb_context_original'], disps, poses, batch['intrinsics'])
+            loss, perc_loss, ssim, l1, smooth_loss = calculate_loss(batch['rgb_original'], batch['rgb_context_original'], disps, poses, batch['intrinsics'])
             loss.backward()
             optim.step()
+            global_iter += 1
+            if global_iter % config.train.display_iter == 0 and global_iter != start_iter:
+                print("Iter: %d, loss: %f, perc_loss: %f, ssim: %f, l1: %f, smooth_loss: %f"%
+                      (global_iter, loss, perc_loss, ssim, l1, smooth_loss))
+
+        lr_scheduler.step()
+        disp_net.eval()
+        pose_net.eval()
 
 
 
