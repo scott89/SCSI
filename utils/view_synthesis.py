@@ -49,8 +49,14 @@ def project_3d2d(points_3d, K, pose=None):
 
     return coords
 
-def view_synthesis(img, img_ref, depth, pose, K, 
+def view_synthesis(img_ref, depth, pose, K, 
                    mode='bilinear', padding_mode='zeros', align_corners=True):
+    '''
+    img_ref: Bx3xHxW
+    depth: Bx1xHxW
+    pose: Bx3x4
+    K: Bx3x3
+    '''
     world_points = project_2d3d(depth, K)
     ref_coords = project_3d2d(world_points, K, pose)
     img_syn = F.grid_sample(img_ref, ref_coords, mode=mode, padding_mode=padding_mode, align_corners=align_corners)

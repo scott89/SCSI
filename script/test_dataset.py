@@ -12,7 +12,7 @@ for data in kitti:
     img_context = data['rgb_context_original'][0]
     pose = data['pose_context'][0]
     K = data['intrinsics']
-    img_syn = view_synthesis(img, img_context, depth, pose, K)
+    img_syn = view_synthesis(img_context, depth, pose, K)
     im = img.numpy()
     im_ct = img_context.numpy()
     im_syn = img_syn.numpy()

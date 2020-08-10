@@ -44,7 +44,7 @@ class Disp(nn.Module):
         self.activ = nn.Sigmoid()
     def forward(self, x):
         pre = self.activ(self.conv1(x))
-        pre /= self.min_depth
+        pre = pre / self.min_depth
         return pre
 
 class DispDecoder(nn.Module):

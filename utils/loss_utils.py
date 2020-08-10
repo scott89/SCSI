@@ -50,7 +50,7 @@ def inv_depths_normalize(inv_depths):
 
 
 
-def calc_smoothness(inv_depths, images, num_scales):
+def calc_smoothness(inv_depths, image):
     """
     Calculate smoothness values for inverse depths
 
@@ -58,7 +58,7 @@ def calc_smoothness(inv_depths, images, num_scales):
     ----------
     inv_depths : list of torch.Tensor [B,1,H,W]
         Inverse depth maps
-    images : list of torch.Tensor [B,3,H,W]
+    image : torch.Tensor [B,3,H,W]
         Inverse depth maps
     num_scales : int
         Number of scales considered
@@ -74,15 +74,19 @@ def calc_smoothness(inv_depths, images, num_scales):
     inv_depth_gradients_x = [gradient_x(d) for d in inv_depths_norm]
     inv_depth_gradients_y = [gradient_y(d) for d in inv_depths_norm]
 
-    image_gradients_x = [gradient_x(image) for image in images]
-    image_gradients_y = [gradient_y(image) for image in images]
+    #image_gradients_x = [gradient_x(image) for image in images]
+    #image_gradients_y = [gradient_y(image) for image in images]
+    image_gradients_x = gradient_x(image)
+    image_gradients_y = gradient_y(image)
 
-    weights_x = [torch.exp(-torch.mean(torch.abs(g), 1, keepdim=True)) for g in image_gradients_x]
-    weights_y = [torch.exp(-torch.mean(torch.abs(g), 1, keepdim=True)) for g in image_gradients_y]
+    #weights_x = [torch.exp(-torch.mean(torch.abs(g), 1, keepdim=True)) for g in image_gradients_x]
+    #weights_y = [torch.exp(-torch.mean(torch.abs(g), 1, keepdim=True)) for g in image_gradients_y]
+    weights_x = torch.exp(-torch.mean(torch.abs(image_gradients_x), 1, keepdim=True))
+    weights_y = torch.exp(-torch.mean(torch.abs(image_gradients_y), 1, keepdim=True))
 
     # Note: Fix gradient addition
-    smoothness_x = [inv_depth_gradients_x[i] * weights_x[i] for i in range(num_scales)]
-    smoothness_y = [inv_depth_gradients_y[i] * weights_y[i] for i in range(num_scales)]
+    smoothness_x = [d_g_x * weights_x for d_g_x in inv_depth_gradients_x]
+    smoothness_y = [d_g_y * weights_y for d_g_y in inv_depth_gradients_y]
     return smoothness_x, smoothness_y
 
 
