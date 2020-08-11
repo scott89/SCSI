@@ -23,13 +23,14 @@ def trainer(config):
             disps = disp_net(batch['rgb'], flip_prob=0.5)
             disps = resize(disps, shape=batch['rgb'].shape[2:], mode='bilinear')
             poses = pose_net(batch['rgb'], batch['rgb_context'])
-            loss, perc_loss, ssim, l1, smooth_loss = calculate_loss(batch['rgb_original'], batch['rgb_context_original'], disps, poses, batch['intrinsics'])
-            loss.backward()
+            loss_all, loss = calculate_loss(batch['rgb_original'], batch['rgb_context_original'], 
+                                                                    disps, poses, batch['intrinsics'], True)
+            loss_all.backward()
             optim.step()
             global_iter += 1
             if global_iter % config.train.display_iter == 0 and global_iter != start_iter:
                 print("Iter: %d, loss: %f, perc_loss: %f, ssim: %f, l1: %f, smooth_loss: %f"%
-                      (global_iter, loss, perc_loss, ssim, l1, smooth_loss))
+                      (global_iter, loss_all, loss['perc_loss'], loss['ssim'], loss['l1'], loss['smooth_loss']))
 
         lr_scheduler.step()
         disp_net.eval()
