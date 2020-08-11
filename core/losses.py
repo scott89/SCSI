@@ -101,7 +101,7 @@ def smoothness_loss(disp, image, smooth_loss_weight):
 
 
 def calculate_loss(img, img_ref, disp, pose, K, return_syn=False, smooth_loss_weight=0.001, ssim_loss_weight=0.85):
-    perc_loss, ssim, l1 = perceptual_loss(img, img_ref, disp, pose, K, perc_loss_weight, return_syn, ssim_loss_weight)
+    perc_loss, ssim, l1 = perceptual_loss(img, img_ref, disp, pose, K, return_syn, ssim_loss_weight)
     loss = perc_loss
     if smooth_loss_weight > 0:
         smooth_loss = smoothness_loss(disp, img, smooth_loss_weight)
