@@ -52,7 +52,7 @@ def l1_loss(x, y):
     l1 = l1.mean(1)
     return l1
 
-def perceptual_loss(img, img_ref, disp, pose, K, alpha=0.85):
+def perceptual_loss(img, img_ref, disp, pose, K, return_syn=False, alpha=0.85):
     '''
     img: Bx3xHxW
     img_ref: list of Bx3xHxW of length n
@@ -63,23 +63,35 @@ def perceptual_loss(img, img_ref, disp, pose, K, alpha=0.85):
     depth = disp2depth(disp)
     ssim = []
     l1 = []
+    if return_syn:
+        img_syns = []
     for d in depth:
         ssim_s = []
         l1_s = []
+        if return_syn:
+            img_syns_s = []
         for ic in range(len(img_ref)):
             img_syn = view_synthesis(img_ref[ic], d, pose[:, ic], K)
+            if return_syn:
+                img_syns_s.append(img_syn)
             ssim_s.append(SSIM(img, img_syn))
             l1_s.append(l1_loss(img, img_syn))
             ssim_s.append(SSIM(img, img_ref[ic]))
             l1_s.append(l1_loss(img, img_ref[ic]))
         ssim.append(ssim_s)
         l1.append(l1_s)
+        if return_syn:
+            img_syns.append(img_syns_s)
     ssim = [torch.min(torch.stack(s, 1), 1)[0] for s in ssim]
     ssim = sum([torch.mean(s) for s in ssim]) / len(ssim)
     l1 = [torch.min(torch.stack(l, 1), 1)[0] for l in l1]
     l1 = sum([torch.mean(l) for l in l1]) / len(l1)
     perc_loss = alpha * ssim + (1-alpha) * l1
-    return perc_loss, ssim, l1
+    if return_syn:
+        return perc_loss, ssim, l1, img_syns
+    else:
+        return perc_loss, ssim, l1
+
 
 def smoothness_loss(disp, image, smooth_loss_weight):
     smoothness_x, smoothness_y = calc_smoothness(disp, image)
@@ -88,8 +100,8 @@ def smoothness_loss(disp, image, smooth_loss_weight):
     return smoothness * smooth_loss_weight
 
 
-def calculate_loss(img, img_ref, disp, pose, K, smooth_loss_weight=0.001, perc_loss_weight=0.85):
-    perc_loss, ssim, l1 = perceptual_loss(img, img_ref, disp, pose, K, perc_loss_weight)
+def calculate_loss(img, img_ref, disp, pose, K, return_syn=False, smooth_loss_weight=0.001, ssim_loss_weight=0.85):
+    perc_loss, ssim, l1 = perceptual_loss(img, img_ref, disp, pose, K, perc_loss_weight, return_syn, ssim_loss_weight)
     loss = perc_loss
     if smooth_loss_weight > 0:
         smooth_loss = smoothness_loss(disp, img, smooth_loss_weight)

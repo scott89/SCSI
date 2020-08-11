@@ -25,7 +25,7 @@ config.train = edict()
 config.train.resume = False
 config.train.restore_optim = False  
 config.train.snapshot = ''
-config.train.output_path = 'models/'
+config.train.output_path = 'models/baseline_v0.1'
 config.train.display_iter = 1
 if config.model.norm == 'BN':
     config.train.backbone_path = 'models/resnet50.pth'
