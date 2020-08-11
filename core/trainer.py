@@ -1,5 +1,5 @@
 from core.builders import *
-from utils.misc import sample_to_cuda, model_restore, resize
+from utils.misc import sample_to_cuda, model_restore, resize, write_train_summary_helper
 from core.losses import calculate_loss
 
 def trainer(config):
@@ -12,8 +12,8 @@ def trainer(config):
                   config.train.resume, config.train.restore_optim,
                   config.train.snapshot, config.train.backbone_path)
     start_epoch = 0
-    start_iter = 0
-    global_iter = start_iter
+    start_step = 0
+    global_step = start_step
     for epoch in range(start_epoch, config.train.optim.max_epoch):
         disp_net.train()
         pose_net.train()
@@ -27,10 +27,14 @@ def trainer(config):
                                                                     disps, poses, batch['intrinsics'], True)
             loss_all.backward()
             optim.step()
-            global_iter += 1
-            if global_iter % config.train.display_iter == 0 and global_iter != start_iter:
+            global_step += 1
+
+            if global_step % config.train.summary_step == 0 and global_step != start_step:
+                write_train_summary_helper(train_summary, batch, disps, loss, global_step)
+                
+            if global_step % config.train.display_step == 0 and global_step != start_step:
                 print("Iter: %d, loss: %f, perc_loss: %f, ssim: %f, l1: %f, smooth_loss: %f"%
-                      (global_iter, loss_all, loss['perc_loss'], loss['ssim'], loss['l1'], loss['smooth_loss']))
+                      (global_step, loss_all, loss['perc_loss'], loss['ssim_loss'], loss['l1_loss'], loss['smooth_loss']))
 
         lr_scheduler.step()
         disp_net.eval()

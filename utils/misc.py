@@ -43,3 +43,34 @@ def resize(x, shape, mode='bilinear', align_corners=False):
     else:
         return F.interpolate(x, shape, mode=mode, align_corners=align_corners)
 
+def norm(x):
+    return (x - x.min())  / (x.max() - x.min())
+
+def write_summary(writer, content, name, content_type, global_step, max_disp=2.0):
+    content = content.detach().cpu().numpy()
+    if content_type == 'scalar':
+        writer.add_scalar(name, content, global_step=global_step)
+    elif content_type == 'img':
+        writer.add_image(name, content, global_step=global_step)
+    elif content_type == 'disp':
+        content = norm(content)
+        #content = 255* (content / max_disp)
+        writer.add_image(name, content, global_step=global_step)
+    else:
+        raise ValueError('Unknown content type: %s'%content_type)
+
+def write_train_summary_helper(train_summary, batch, disps, loss, global_step):
+    img_syns = loss['img_syns'][0]
+    write_summary(train_summary, batch['rgb_original'][0], 'img', 'img', global_step)
+    write_summary(train_summary, batch['rgb_context_original'][0][0], 'ref1', 'img', global_step)
+    write_summary(train_summary, batch['rgb_context_original'][1][0], 'ref2', 'img', global_step)
+    write_summary(train_summary, disps[0][0], 'disp', 'disp', global_step)
+    write_summary(train_summary, img_syns[0][0], 'ref1_syn', 'img', global_step)
+    write_summary(train_summary, img_syns[1][0], 'ref2_syn', 'img', global_step)
+    write_summary(train_summary, loss['loss_all'], 'loss_all', 'scalar', global_step)
+    write_summary(train_summary, loss['perc_loss'], 'perc_loss', 'scalar', global_step)
+    write_summary(train_summary, loss['ssim_loss'], 'ssim_loss', 'scalar', global_step)
+    write_summary(train_summary, loss['l1_loss'], 'l1_loss', 'scalar', global_step)
+    write_summary(train_summary, loss['smooth_loss'], 'smooth_loss', 'scalar', global_step)
+
+
