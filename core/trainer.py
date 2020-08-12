@@ -1,7 +1,9 @@
+import torch
 from core.builders import *
 from utils.misc import sample_to_cuda, model_restore, resize, write_train_summary_helper
 from core.losses import calculate_loss
 from core.validator import depth_validator
+import os
 
 def trainer(config):
     disp_net, pose_net = build_network(config)
