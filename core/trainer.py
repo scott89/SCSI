@@ -1,3 +1,4 @@
+import torch
 import os
 from core.builders import *
 from utils.misc import sample_to_cuda, model_restore, resize, write_train_summary_helper
