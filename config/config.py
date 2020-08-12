@@ -18,14 +18,14 @@ config.dataset.val_batchsize = 1
 # Model
 config.model = edict()
 config.model.norm = 'GN'
-config.model.gpu = [2]
+config.model.gpu = [5]
 
 # train
 config.train = edict()
 config.train.resume = False
 config.train.restore_optim = False  
 config.train.snapshot = ''
-config.train.output_path = 'models/baseline_v0.2'
+config.train.output_path = 'models/baseline_v0.3'
 config.train.display_step = 100
 config.train.summary_step = 100
 if config.model.norm == 'BN':

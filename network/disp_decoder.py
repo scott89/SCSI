@@ -61,7 +61,7 @@ class DispDecoder(nn.Module):
         self.iconv5 = Conv2D(2048, 1024, 3, 1, bias=False, norm_layer=norm_layer, activ=nn.ReLU)
         self.iconv4 = Conv2D(1024, 512, 3, 1, bias=False, norm_layer=norm_layer, activ=nn.ReLU)
         self.iconv3 = Conv2D(513, 256, 3, 1, bias=False, norm_layer=norm_layer, activ=nn.ReLU)
-        self.iconv2 = Conv2D(193, 128, 3, 1, bias=False, norm_layer=norm_layer, activ=nn.ReLU)
+        self.iconv2 = Conv2D(129, 128, 3, 1, bias=False, norm_layer=norm_layer, activ=nn.ReLU)
         self.iconv1 = Conv2D(65, 64, 3, 1, bias=False, norm_layer=norm_layer, activ=nn.ReLU)
         #
         self.disp4 = Disp(512)
@@ -92,7 +92,7 @@ class DispDecoder(nn.Module):
         #
         dec2 = self.dec2(iconv3) # 128
         dec2 = F.interpolate(dec2, in1.shape[2:], mode='bilinear', align_corners=False)
-        con2 = torch.cat([dec2, in1, disp3_up], dim=1) # 193
+        con2 = torch.cat([dec2, disp3_up], dim=1) # 129
         iconv2 = self.iconv2(con2) #128
         disp2 = self.disp2(iconv2)
         #disp2_up = F.interpolate(disp2, in1.shape[2:], mode='bilinear', align_corners=False)
