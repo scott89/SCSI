@@ -1,6 +1,7 @@
 from core.builders import *
 from utils.misc import sample_to_cuda, model_restore, resize, write_train_summary_helper
 from core.losses import calculate_loss
+from core.validator import depth_validator
 
 def trainer(config):
     disp_net, pose_net = build_network(config)
@@ -8,11 +9,9 @@ def trainer(config):
     val_dataloader = build_dataset(config, 'val')
     optim, lr_scheduler = build_optimizer(config, disp_net, pose_net)
     train_summary, val_summary = build_summary_writer(config)
-    model_restore(disp_net, pose_net, optim, 
-                  config.train.resume, config.train.restore_optim,
-                  config.train.snapshot, config.train.backbone_path)
-    start_epoch = 0
-    start_step = 0
+    start_epoch, start_step = model_restore(disp_net, pose_net, optim, 
+                                            config.train.resume, config.train.restore_optim,
+                                            config.train.snapshot, config.train.backbone_path)
     global_step = start_step
     for epoch in range(start_epoch, config.train.optim.max_epoch):
         disp_net.train()
@@ -27,18 +26,27 @@ def trainer(config):
                                                                     disps, poses, batch['intrinsics'], True)
             loss_all.backward()
             optim.step()
-            global_step += 1
-
             if global_step % config.train.summary_step == 0 and global_step != start_step:
                 write_train_summary_helper(train_summary, batch, disps, loss, global_step)
                 
             if global_step % config.train.display_step == 0 and global_step != start_step:
-                print("Iter: %d, loss: %f, perc_loss: %f, ssim: %f, l1: %f, smooth_loss: %f"%
-                      (global_step, loss_all, loss['perc_loss'], loss['ssim_loss'], loss['l1_loss'], loss['smooth_loss']))
+                print("Iter: %d/%d, loss: %f, perc_loss: %f, ssim: %f, l1: %f, smooth_loss: %f"%
+                      (global_step, len(train_dataloader), loss_all, loss['perc_loss'], loss['ssim_loss'], loss['l1_loss'], loss['smooth_loss']))
+            global_step += 1
 
-        lr_scheduler.step()
-        disp_net.eval()
-        pose_net.eval()
+        if epoch % config.val.val_epoch == 0:
+            depth_validator(disp_net,  val_dataloader, val_summary, epoch, global_step, config.model.gpu[0])
+        if epoch in config.train.optim.lr_decay_epochs:
+            lr_scheduler.step()
+        if epoch % config.train.snapshot_epoch == 0:
+            torch.save({
+                'epoch': epoch,
+                'global_step': global_step,
+                'disp_net': disp_net.module.state_dict(),
+                'pose_net': pose_net.module.state_dict(),
+                'optimizer_state_dict': optim.state_dict(),
+                'config': config
+            }, os.path.join(config.train.output_path, 'epoch-%d.pth'%epoch))
 
 
 

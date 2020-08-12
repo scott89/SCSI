@@ -31,8 +31,9 @@ class Resize(object):
         h_out, w_out = self.image_shape
         # resize rgb
         data['rgb'] = self.resize(data['rgb'])
-        data['rgb_context'] = [self.resize(r) 
-                               for r in data['rgb_context']]
+        if 'rgb_context' in data:
+            data['rgb_context'] = [self.resize(r) 
+                                   for r in data['rgb_context']]
         # resize depth
         if 'depth' in data:
             data['depth'] = cv2.resize(data['depth'], 
@@ -53,16 +54,18 @@ class ToTensor(object):
     def __call__(self, data):
         data['rgb'] = self.to_tensor(data['rgb']).type(self.dtype)
         data['rgb_original'] = self.to_tensor(data['rgb_original']).type(self.dtype)
-        data['rgb_context'] = [self.to_tensor(r).type(self.dtype) 
-                              for r in data['rgb_context']]
-        data['rgb_context_original'] = [self.to_tensor(r).type(self.dtype) 
-                              for r in data['rgb_context_original']]
+        if 'rgb_context' in data:
+            data['rgb_context'] = [self.to_tensor(r).type(self.dtype) 
+                                  for r in data['rgb_context']]
+            data['rgb_context_original'] = [self.to_tensor(r).type(self.dtype) 
+                                  for r in data['rgb_context_original']]
         #data['intrinsics'] = self.to_tensor(data['intrinsics'])
         data['intrinsics'] = torch.from_numpy(data['intrinsics'])
         if self.data_format == 'BGR':
             data['rgb'] = torch.flip(data['rgb'], dims=[0])
             #data['rgb_original'] = data['rgb_original'][-1::-1]
-            data['rgb_context'] = [torch.flip(r, dims=[0]) for r in data['rgb_context']]
+            if 'rgb_context' in data:
+                data['rgb_context'] = [torch.flip(r, dims=[0]) for r in data['rgb_context']]
             #data['rgb_context_original'] = [r[-1::-1] for r in data['rgb_context_original']]
 
         if 'depth' in data.keys():
@@ -76,7 +79,8 @@ class Normalize(object):
         self.normalize = T.Normalize(mean, std, inplace=True)
     def __call__(self, data):
         data['rgb'] = self.normalize(data['rgb'])
-        data['rgb_context'] = [self.normalize(r) for r in data['rgb_context']]
+        if 'rgb_context' in data:
+            data['rgb_context'] = [self.normalize(r) for r in data['rgb_context']]
         return data
 
 class Duplicate(object):
