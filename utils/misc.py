@@ -19,7 +19,7 @@ def sample_to_cuda(data, gpu_id=0, non_blocking=True):
 
 def model_restore(disp_net, pose_net, optim,
     resume, restore_optim, snapshot, backbone_path):
-    gpu_id = torch.device(disp_net.device_ids[0])
+    #gpu_id = torch.device(disp_net.device_ids[0])
     gpu_id = 'cpu'
     if resume:
         ckpt = torch.load(snapshot, map_location=gpu_id)
@@ -27,9 +27,14 @@ def model_restore(disp_net, pose_net, optim,
         pose_net.module.load_state_dict(ckpt['pose_net'])
         if restore_optim:
             optim.load_state_dict(ckpt['optim'])
+        start_epoch = ckpt['epoch'] + 1
+        start_step = ckpt['global_step']
     else:
         ckpt = torch.load(backbone_path, map_location=gpu_id)
         disp_net.module.encoder.load_state_dict(ckpt, strict=False)
+        start_epoch = 0
+        start_step = 0
+    return start_epoch, start_step
 
 def disp2depth(disp):
     if isinstance(disp, list):
@@ -72,5 +77,15 @@ def write_train_summary_helper(train_summary, batch, disps, loss, global_step):
     write_summary(train_summary, loss['ssim_loss'], 'ssim_loss', 'scalar', global_step)
     write_summary(train_summary, loss['l1_loss'], 'l1_loss', 'scalar', global_step)
     write_summary(train_summary, loss['smooth_loss'], 'smooth_loss', 'scalar', global_step)
+
+def write_val_summary_helper(val_summary, rgb, disp_gt, disp, metrics, metric_names, global_step):
+    write_summary(val_summary, rgb[0], 'img', 'img', global_step)
+    write_summary(val_summary, disp_gt[0], 'disp_gt', 'disp', global_step)
+    write_summary(val_summary, disp[0], 'disp', 'disp', global_step)
+    #metrics = metrics.cpu().numpy()
+    for i, n in enumerate(metric_names):
+        write_summary(val_summary, metrics[i], n, 'scalar', global_step)
+
+
 
 

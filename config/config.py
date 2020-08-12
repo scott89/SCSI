@@ -11,14 +11,14 @@ config.dataset.train_data_file = 'data_splits/eigen_zhou_files.txt'
 config.dataset.train_transform = edict()
 config.dataset.train_transform.jittering = [0.2, 0.2, 0.2, 0.05]
 config.dataset.train_batchsize = 8
-config.dataset.val_data_file = 'data_splits/kitti_val_files.txt'
+config.dataset.val_data_file = 'data_splits/eigen_test_files.txt'
 config.dataset.val_transform = edict()
 config.dataset.val_batchsize = 1
 
 # Model
 config.model = edict()
 config.model.norm = 'GN'
-config.model.gpu = [2]
+config.model.gpu = [1]
 
 # train
 config.train = edict()
@@ -26,8 +26,9 @@ config.train.resume = False
 config.train.restore_optim = False  
 config.train.snapshot = ''
 config.train.output_path = 'models/baseline_v0.2'
-config.train.display_step = 100
-config.train.summary_step = 100
+config.train.display_step = 50
+config.train.summary_step = 200
+config.train.snapshot_epoch = 1
 if config.model.norm == 'BN':
     config.train.backbone_path = 'models/resnet50.pth'
 elif config.model.norm == 'GN':
@@ -39,8 +40,12 @@ config.train.optim.lr = 2*1e-4
 config.train.optim.weight_decay = 1e-4
 config.train.optim.momentum = 0.9
 config.train.optim.lr_decay_factor = 0.1
-config.train.optim.lr_decay_epochs = [20, 40]
+config.train.optim.lr_decay_epochs = [100, 200]
 config.train.optim.max_epoch = 60
+
+#
+config.val = edict()
+config.val.val_epoch = 1
 
 # Input
 config.input = edict()
