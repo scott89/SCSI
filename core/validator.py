@@ -143,7 +143,7 @@ def depth_validator(disp_net, val_dataloader, val_summary, epoch, global_step, g
         outputs.append(output)
     metrics = reduce_metrics(outputs)
     print_results(metrics)
-    write_val_summary_helper(val_summary, batch['rgb_origin'], 
+    write_val_summary_helper(val_summary, batch['rgb_original'], 
                              disp2depth(batch['depth']), 
                              output['disp'],
                              metrics['depth_pp_gt'],
