@@ -1,18 +1,9 @@
-import torch
-import numpy as np
 import os
-import random
-from torch.backends import cudnn
 from core.builders import *
 from utils.misc import sample_to_cuda, model_restore, resize, write_train_summary_helper
 from core.losses import calculate_loss
 from core.validator import depth_validator
 
-cudnn.benchmark = True
-np.random.seed(128)
-random.seed(128)
-torch.cuda.manual_seed_all(128)
-torch.manual_seed(128)
 
 def trainer(config):
     disp_net, pose_net = build_network(config)
