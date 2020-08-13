@@ -26,7 +26,7 @@ class PoseNet(nn.Module):
                                   self.res4, self.res5, self.res6, self.res7)
         self.pose_pred = nn.Conv2d(nc[6], 6*self.num_ref, 1)
     
-    def forward(self, image, context):
+    def forward(self, image, context, return_pose_vec=False):
         assert(len(context) == self.num_ref)
         x = torch.cat([image]+context, dim=1)
         stem = self.stem(x)
@@ -36,6 +36,8 @@ class PoseNet(nn.Module):
         pose = 0.01 * pose.view(-1, 6)
         pose_mat = pose_vec2mat(pose)
         pose_mat = pose_mat.view(-1, self.num_ref, 3, 4)
+        if return_pose_vec:
+            return pose_mat, pose.view([-1, self.num_ref, 6])
         return pose_mat
 
         

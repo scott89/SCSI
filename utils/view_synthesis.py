@@ -37,7 +37,7 @@ def project_2d3d(depth, K, pose=None):
 def project_3d2d(points_3d, K, pose=None):
     B, C, H, W = points_3d.shape
     if pose is not None:
-        points_3d = pose[:, :3, :3] @ points_3d.view([B, C, -1]) + pose[:, :3, 2:3]
+        points_3d = pose[:, :3, :3] @ points_3d.view([B, C, -1]) + pose[:, :3, 3:]
         #points_3d = pose @ points_3d
     coords = K @ points_3d # B x 3 x HW
     xs = coords[:, 0]
