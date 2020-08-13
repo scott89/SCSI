@@ -2,6 +2,19 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+def disp_to_depth(disp, min_depth=0.1, max_depth=100):
+    """Convert network's sigmoid output into depth prediction
+    The formula for this conversion is given in the 'additional considerations'
+    section of the paper.
+    """
+    min_disp = 1 / max_depth
+    max_disp = 1 / min_depth
+    scaled_disp = min_disp + (max_disp - min_disp) * disp
+    depth = 1 / scaled_disp
+    return scaled_disp, depth
+
+
+
 class ResBlock(nn.Module):
     def __init__(self, in_channels, out_channels, norm_layer, stride=1, dropout=0.0):
         super(ResBlock, self).__init__()
@@ -44,7 +57,8 @@ class Disp(nn.Module):
         self.activ = nn.Sigmoid()
     def forward(self, x):
         pre = self.activ(self.conv1(x))
-        pre = pre / self.min_depth
+        pre = disp_to_depth(pre)[0]
+        #pre = pre / self.min_depth
         return pre
 
 class DispDecoder(nn.Module):

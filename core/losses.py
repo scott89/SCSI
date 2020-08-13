@@ -82,12 +82,10 @@ def perceptual_loss(img, img_ref, disp, pose, K, return_syn=False, alpha=0.85):
         l1.append(l1_s)
         if return_syn:
             img_syns.append(img_syns_s)
-    ssim = [torch.min(torch.stack(s, 1), 1)[0] for s in ssim]
-    ssim = alpha * sum([torch.mean(s) for s in ssim]) / len(ssim)
-    l1 = [torch.min(torch.stack(l, 1), 1)[0] for l in l1]
-    l1 = (1-alpha) * sum([torch.mean(l) for l in l1]) / len(l1)
-    perc_loss = ssim + l1
-    loss = {'perc_loss': perc_loss, 'ssim_loss': ssim, 'l1_loss': l1}
+    perc = [alpha * torch.stack(s, 1) + (1-alpha) * torch.stack(l, 1) for s, l in zip(ssim, l1)]
+    perc = [torch.min(p, 1)[0] for p in perc]
+    perc_loss = sum(torch.mean(p) for p in perc) / len(perc)
+    loss = {'perc_loss': perc_loss}
     if return_syn:
         loss.update({'img_syns': img_syns})
     return loss

@@ -33,8 +33,8 @@ def trainer(config):
                 write_train_summary_helper(train_summary, batch, disps, loss, global_step)
                 
             if global_step % config.train.display_step == 0 and global_step != start_step:
-                print("Iter: %d/%d, loss: %f, perc_loss: %f, ssim: %f, l1: %f, smooth_loss: %f"%
-                      (global_step, len(train_dataloader), loss_all, loss['perc_loss'], loss['ssim_loss'], loss['l1_loss'], loss['smooth_loss']))
+                print("Iter: %d/%d, loss: %f, perc_loss: %f, smooth_loss: %f"%
+                      (global_step, len(train_dataloader), loss_all, loss['perc_loss'],  loss['smooth_loss']))
             global_step += 1
 
         if epoch % config.val.val_epoch == 0:
