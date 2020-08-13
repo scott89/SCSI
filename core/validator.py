@@ -88,11 +88,11 @@ def compute_depth_metrics(gt, pred, use_gt_scale=True, min_depth=0, max_depth=80
 def evaluate_depth(disp_net, batch):
         """Evaluate batch to produce depth metrics."""
         # Get predicted depth
-        disp = disp_net(batch['rgb'])[-1]
+        disp = disp_net(batch['rgb'])[0]
         depth = disp2depth(disp)
         # Post-process predicted depth
         batch['rgb'] = torch.flip(batch['rgb'], [3])
-        disp_flipped = disp_net(batch['rgb'])[-1]
+        disp_flipped = disp_net(batch['rgb'])[0]
         disp_pp = post_process_inv_depth(
             disp, disp_flipped)
         depth_pp = disp2depth(disp_pp)

@@ -93,7 +93,7 @@ def perceptual_loss(img, img_ref, disp, pose, K, return_syn=False, alpha=0.85):
 
 def smoothness_loss(disp, image, smooth_loss_weight):
     smoothness_x, smoothness_y = calc_smoothness(disp, image)
-    smoothness = zip(smoothness_x[-1::-1], smoothness_y[-1::-1])
+    smoothness = zip(smoothness_x, smoothness_y)
     smoothness = sum([(s_x.abs().mean() + s_y.abs().mean())/2.0**i for i, (s_x, s_y) in enumerate(smoothness)]) / len(disp)
     return smoothness * smooth_loss_weight
 

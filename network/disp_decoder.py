@@ -117,7 +117,8 @@ class DispDecoder(nn.Module):
         iconv1 = self.iconv1(con1) # 64
         disp1 = self.disp1(iconv1)
         disp1 = F.interpolate(disp1, scale_factor=2, mode='bilinear', align_corners=False)
-        return [disp4, disp3, disp2, disp1]
+        return [disp1, disp2, disp3, disp4]
+    
 
 
         
