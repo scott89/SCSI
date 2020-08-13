@@ -26,7 +26,7 @@ def model_restore(disp_net, pose_net, optim,
         disp_net.module.load_state_dict(ckpt['disp_net'])
         pose_net.module.load_state_dict(ckpt['pose_net'])
         if restore_optim:
-            optim.load_state_dict(ckpt['optim'])
+            optim.load_state_dict(ckpt['optimizer_state_dict'])
         start_epoch = ckpt['epoch'] + 1
         start_step = ckpt['global_step']
     else:
