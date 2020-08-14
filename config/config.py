@@ -18,14 +18,14 @@ config.dataset.val_batchsize = 1
 # Model
 config.model = edict()
 config.model.norm = 'GN'
-config.model.gpu = [3]
+config.model.gpu = [6]
 
 # train
 config.train = edict()
 config.train.resume = False
 config.train.restore_optim = False  
 config.train.snapshot = ''
-config.train.output_path = 'models/baseline_v0.4'
+config.train.output_path = 'models/baseline_packnet'
 config.train.display_step = 50
 config.train.summary_step = 200
 config.train.snapshot_epoch = 1

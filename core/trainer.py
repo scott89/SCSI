@@ -12,9 +12,10 @@ def trainer(config):
     val_dataloader = build_dataset(config, 'val')
     optim, lr_scheduler = build_optimizer(config, disp_net, pose_net)
     train_summary, val_summary = build_summary_writer(config)
-    start_epoch, start_step = model_restore(disp_net, pose_net, optim, 
-                                            config.train.resume, config.train.restore_optim,
-                                            config.train.snapshot, config.train.backbone_path)
+    #start_epoch, start_step = model_restore(disp_net, pose_net, optim, 
+    #                                        config.train.resume, config.train.restore_optim,
+    #                                        config.train.snapshot, config.train.backbone_path)
+    start_epoch, start_step = 0, 0
     global_step = start_step
     for epoch in range(start_epoch, config.train.optim.max_epoch):
         disp_net.train()
