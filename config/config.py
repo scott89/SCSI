@@ -39,9 +39,9 @@ config.train.optim = edict()
 config.train.optim.lr = 2*1e-4
 config.train.optim.weight_decay = 1e-4
 config.train.optim.momentum = 0.9
-config.train.optim.lr_decay_factor = 0.1
-config.train.optim.lr_decay_epochs = [100, 200]
-config.train.optim.max_epoch = 60
+config.train.optim.lr_decay_factor = 0.5
+config.train.optim.lr_decay_epochs = [1000, 2000]
+config.train.optim.max_epoch = 80
 
 #
 config.val = edict()

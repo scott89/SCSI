@@ -20,7 +20,7 @@ def trainer(config):
     for epoch in range(start_epoch, config.train.optim.max_epoch):
         disp_net.train()
         pose_net.train()
-        for batch in train_dataloader:
+        for batch_id, batch in enumerate(train_dataloader):
             optim.zero_grad()
             batch = sample_to_cuda(batch, config.model.gpu[0])
             disps = disp_net(batch['rgb'], flip_prob=0.5)
@@ -34,8 +34,8 @@ def trainer(config):
                 write_train_summary_helper(train_summary, batch, disps, loss, global_step)
                 
             if global_step % config.train.display_step == 0 and global_step != start_step:
-                print("Iter: %d/%d, loss: %f, perc_loss: %f, smooth_loss: %f"%
-                      (global_step, len(train_dataloader), loss_all, loss['perc_loss'],  loss['smooth_loss']))
+                print("Epoch: %d global_step: %d,  batch_id: %d/%d, loss: %f, perc_loss: %f, smooth_loss: %f"%
+                      (epoch, global_step, batch_id, len(train_dataloader), loss_all, loss['perc_loss'],  loss['smooth_loss']))
             global_step += 1
 
         if epoch % config.val.val_epoch == 0:
