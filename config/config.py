@@ -22,9 +22,9 @@ config.model.gpu = [3]
 
 # train
 config.train = edict()
-config.train.resume = False
-config.train.restore_optim = False  
-config.train.snapshot = ''
+config.train.resume = True
+config.train.restore_optim = True
+config.train.snapshot = 'models/baseline_v0.4/epoch-20.pth'
 config.train.output_path = 'models/baseline_v0.4'
 config.train.display_step = 50
 config.train.summary_step = 200
