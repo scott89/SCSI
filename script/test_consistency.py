@@ -18,7 +18,7 @@ from core.losses import calculate_loss
 data_path = config.dataset.data_path
 data_file = config.dataset.train_data_file
 with_context = True
-with_depth = False
+with_depth = True
 with_pose = False
 batch_size = config.dataset.train_batchsize
 transform = build_transform(config, 'train')
@@ -31,7 +31,7 @@ dataset = eval(config.dataset.name)(data_path = data_path,
 data_file = os.path.join(data_path, data_file)
 transform = partial(train_transforms, image_shape=(192, 640), jittering=(0.2, 0.2, 0.2, 0.05))
 kitti_dataset = KITTIDataset(data_path, data_file, data_transform=transform,
-                            with_pose=with_pose, 
+                            with_pose=with_pose, depth_type='velodyne', 
                              back_context=1, forward_context=1)
 a = dataset[0]
 b = kitti_dataset[0]

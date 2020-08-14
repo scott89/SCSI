@@ -13,10 +13,20 @@ class ColorJittering(object):
                                              contrast=contrast,
                                              saturation=saturation,
                                              hue=hue)
+        self.color_jittering = T.ColorJitter()
+        self.brightness = brightness
+        self.contrast = contrast
+        self.saturation = saturation
+        self.hue = hue
     def __call__(self, data):
-        data['rgb'] = self.color_jittering(data['rgb'])
+        augmentation = self.color_jittering.get_params(
+            brightness=[max(0, 1 - self.brightness), 1 + self.brightness],
+            contrast=[max(0, 1 - self.contrast), 1 + self.contrast],
+            saturation=[max(0, 1 - self.saturation), 1 + self.saturation],
+            hue=[-self.hue, self.hue])
+        data['rgb'] = augmentation(data['rgb'])
         if 'rgb_context' in data:
-            data['rgb_context'] = [self.color_jittering(r) 
+            data['rgb_context'] = [augmentation(r) 
                                    for r in data['rgb_context']]
         return data
 
@@ -37,7 +47,7 @@ class Resize(object):
         # resize depth
         if 'depth' in data:
             data['depth'] = cv2.resize(data['depth'], 
-                                   tuple(self.image_shape[-1::-1]), interpolation=cv2.INTER_LINEAR)
+                                   tuple(self.image_shape[-1::-1]), interpolation=cv2.INTER_NEAREST)
         # resize intrinsics
         intrinsics = np.copy(data['intrinsics'])                                                                                                                          
         intrinsics[0] *= w_out / w_ori
