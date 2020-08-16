@@ -24,8 +24,8 @@ config.model.gpu = [3]
 config.train = edict()
 config.train.resume = True
 config.train.restore_optim = True
-config.train.snapshot = 'models/baseline_v0.4/epoch-20.pth'
-config.train.output_path = 'models/baseline_v0.4'
+config.train.snapshot = 'models/baseline_v0.4/epoch-69.pth'
+config.train.output_path = 'models/baseline_v0.4_2'
 config.train.display_step = 50
 config.train.summary_step = 200
 config.train.snapshot_epoch = 1
@@ -36,12 +36,12 @@ elif config.model.norm == 'GN':
 else:
     raise ValueError('Not Implemented %s'%config.model.norm)
 config.train.optim = edict()
-config.train.optim.lr = 2*1e-4
+config.train.optim.lr = 1*1e-4
 config.train.optim.weight_decay = 1e-4
 config.train.optim.momentum = 0.9
 config.train.optim.lr_decay_factor = 0.5
 config.train.optim.lr_decay_epochs = [1000, 2000]
-config.train.optim.max_epoch = 80
+config.train.optim.max_epoch = 1000
 
 #
 config.val = edict()
