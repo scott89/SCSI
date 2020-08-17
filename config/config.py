@@ -17,15 +17,15 @@ config.dataset.val_batchsize = 1
 
 # Model
 config.model = edict()
-config.model.norm = 'GN'
-config.model.gpu = [3]
+config.model.norm = 'BN'
+config.model.gpu = [4]
 
 # train
 config.train = edict()
-config.train.resume = True
-config.train.restore_optim = True
+config.train.resume = False
+config.train.restore_optim = False
 config.train.snapshot = 'models/baseline_v0.4/epoch-69.pth'
-config.train.output_path = 'models/baseline_v0.4_2'
+config.train.output_path = 'models/baseline_v0.5_bn'
 config.train.display_step = 50
 config.train.summary_step = 200
 config.train.snapshot_epoch = 1
