@@ -10,7 +10,7 @@ config.dataset.num_workers = 8
 config.dataset.train_data_file = 'data_splits/eigen_zhou_files.txt'
 config.dataset.train_transform = edict()
 config.dataset.train_transform.jittering = [0.2, 0.2, 0.2, 0.05]
-config.dataset.train_batchsize = 4
+config.dataset.train_batchsize = 8
 config.dataset.val_data_file = 'data_splits/eigen_test_files.txt'
 config.dataset.val_transform = edict()
 config.dataset.val_batchsize = 1
@@ -18,14 +18,14 @@ config.dataset.val_batchsize = 1
 # Model
 config.model = edict()
 config.model.norm = 'GN'
-config.model.gpu = [1]
+config.model.gpu = [2]
 
 # train
 config.train = edict()
 config.train.resume = False
 config.train.restore_optim = False  
 config.train.snapshot = ''
-config.train.output_path = 'models/baseline_packnet_bs4'
+config.train.output_path = 'models/baseline_packnet_res'
 config.train.display_step = 50
 config.train.summary_step = 200
 config.train.snapshot_epoch = 1
