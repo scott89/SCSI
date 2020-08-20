@@ -32,6 +32,8 @@ def model_restore(disp_net, pose_net, optim,
     else:
         ckpt = torch.load(backbone_path, map_location=gpu_id)
         disp_net.module.encoder.load_state_dict(ckpt, strict=False)
+        ckpt['conv1.weight'] = torch.cat([ckpt['conv1.weight']]*2, 1) / 2
+        pose_net.module.encoder.encoder.load_state_dict(ckpt, strict=False)
         start_epoch = 0
         start_step = 0
     return start_epoch, start_step
