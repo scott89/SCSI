@@ -41,7 +41,7 @@ config.train.optim.weight_decay = 1e-4
 config.train.optim.momentum = 0.9
 config.train.optim.lr_decay_factor = 0.5
 config.train.optim.lr_decay_epochs = [1000, 2000]
-config.train.optim.max_epoch = 80
+config.train.optim.max_epoch = 1000
 
 #
 config.val = edict()
