@@ -10,7 +10,7 @@ config.dataset.num_workers = 8
 config.dataset.train_data_file = 'data_splits/eigen_zhou_files.txt'
 config.dataset.train_transform = edict()
 config.dataset.train_transform.jittering = [0.2, 0.2, 0.2, 0.05]
-config.dataset.train_batchsize = 30
+config.dataset.train_batchsize = 16
 config.dataset.val_data_file = 'data_splits/eigen_test_files.txt'
 config.dataset.val_transform = edict()
 config.dataset.val_batchsize = 1
@@ -18,14 +18,19 @@ config.dataset.val_batchsize = 1
 # Model
 config.model = edict()
 config.model.norm = 'BN'
-config.model.gpu = [3, 4]
+config.model.syn_norm = True
+config.model.gpu = [1, 2]
+
+gpu_str = ','.join(map(str, config.model.gpu))
+os.environ['CUDA_VISIBLE_DEVICES'] = gpu_str
+config.model.gpu = list(range(len(config.model.gpu)))
 
 # train
 config.train = edict()
 config.train.resume = False
 config.train.restore_optim = False
 config.train.snapshot = 'models/baseline_v0.4/epoch-69.pth'
-config.train.output_path = 'models/baseline_v0.6'
+config.train.output_path = 'models/baseline_mp_v0.6'
 config.train.display_step = 50
 config.train.summary_step = 200
 config.train.snapshot_epoch = 1
@@ -36,8 +41,8 @@ elif config.model.norm == 'GN':
 else:
     raise ValueError('Not Implemented %s'%config.model.norm)
 config.train.optim = edict()
-config.train.optim.lr = 1*1e-4
-config.train.optim.weight_decay = 1e-4
+config.train.optim.lr = 2*1e-4
+config.train.optim.weight_decay = 1e-5
 config.train.optim.momentum = 0.9
 config.train.optim.lr_decay_factor = 0.5
 config.train.optim.lr_decay_epochs = [1000, 2000]
