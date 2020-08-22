@@ -42,8 +42,9 @@ def build_optimizer(config, disp_net, pose_net):
     lr = config.train.optim.lr
     lr_decay_factor = config.train.optim.lr_decay_factor
     wd = config.train.optim.weight_decay
-    norm_layer = {'BN': nn.BatchNorm2d, 'GN': nn.GroupNorm}
-    norm_layer = norm_layer[config.model.norm]
+    #norm_layer = {'BN': nn.BatchNorm2d, 'GN': nn.GroupNorm}
+    #norm_layer = norm_layer[config.model.norm]
+    norm_layer = [nn.BatchNorm2d, nn.BatchNorm1d, nn.GroupNorm, nn.SyncBatchNorm]
     disp_norm = get_params(disp_net, norm_layer, '', ['weight', 'bias'])
     pose_norm = get_params(pose_net, norm_layer, '', ['weight', 'bias'])
     learnable_layers = [nn.Conv2d, nn.Linear]
