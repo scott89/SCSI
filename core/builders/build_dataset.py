@@ -1,6 +1,6 @@
 from core.builders.build_transform import build_transform
 from core.datasets import *
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, DistributedSampler
 
 def worker_init_fn(worker_id):                                                                                                                                     
     """Function to initialize workers"""
@@ -8,7 +8,7 @@ def worker_init_fn(worker_id):
     np.random.seed(time_seed + worker_id)
 
 
-def build_dataset(config, phase):
+def build_dataset(config, phase, gpu_id=None, world_size=None):
     transform = build_transform(config, phase)
     data_path = config.dataset.data_path
     if phase == 'train':
@@ -30,10 +30,25 @@ def build_dataset(config, phase):
                                        with_context = with_context,
                                        with_depth = with_depth,
                                        with_pose = with_pose)
-    dataset = DataLoader(dataset, 
-                         batch_size = batch_size,
-                         num_workers = config.dataset.num_workers,
-                         pin_memory = True,
-                         shuffle = phase=='train'
-                        )
+    if phase=='train':
+        data_sampler = DistributedSampler(
+            dataset,      
+            num_replicas=world_size,                                                                                                                           
+            rank=gpu_id)  
+        dataset = DataLoader(dataset, 
+                             batch_size = batch_size,
+                             num_workers = config.dataset.num_workers,
+                             pin_memory = True,
+                             shuffle = False,
+                             sampler=data_sampler
+                            )
+    else:
+        dataset = DataLoader(dataset, 
+                             batch_size = batch_size,
+                             num_workers = config.dataset.num_workers,
+                             pin_memory = True,
+                             shuffle = False,
+                            )
+
+
     return dataset
