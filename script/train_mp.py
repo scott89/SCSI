@@ -21,7 +21,7 @@ torch.manual_seed(128)
 
 if __name__ == '__main__':
     os.environ['MASTER_ADDR']='127.0.0.1'
-    os.environ['MASTER_PORT']='8888'
+    os.environ['MASTER_PORT']='8889'
     ########################
     world_size = len(config.model.gpu)
     mp.spawn(trainer,

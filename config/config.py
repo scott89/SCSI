@@ -19,7 +19,7 @@ config.dataset.val_batchsize = 1
 config.model = edict()
 config.model.norm = 'BN'
 config.model.syn_norm = True
-config.model.gpu = [1, 2]
+config.model.gpu = [3, 4]
 
 gpu_str = ','.join(map(str, config.model.gpu))
 os.environ['CUDA_VISIBLE_DEVICES'] = gpu_str
@@ -30,7 +30,7 @@ config.train = edict()
 config.train.resume = False
 config.train.restore_optim = False
 config.train.snapshot = 'models/baseline_v0.4/epoch-69.pth'
-config.train.output_path = 'models/baseline_mp_v0.6'
+config.train.output_path = 'models/baseline_mp_v0.7'
 config.train.display_step = 50
 config.train.summary_step = 200
 config.train.snapshot_epoch = 1

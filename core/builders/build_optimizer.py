@@ -55,8 +55,8 @@ def build_optimizer(config, disp_net, pose_net):
     params = [
         {'params': disp_norm[1], 'lr': lr},
         {'params': pose_norm[1], 'lr': lr},
-        {'params': disp_weight[1], 'lr': lr, 'weight_decay': wd},
-        {'params': pose_weight[1], 'lr': lr, 'weight_decay': wd},
+        {'params': disp_weight[1], 'lr': lr},
+        {'params': pose_weight[1], 'lr': lr},
         {'params': disp_bias[1], 'lr': lr},
         {'params': pose_bias[1], 'lr': lr}
     ]
