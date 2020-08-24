@@ -18,7 +18,7 @@ def sample_to_cuda(data, gpu_id=0, non_blocking=True):
         raise ValueError('Unknown data type: %s'%(type(data)))
 
 def model_restore(disp_net, pose_net, optim,
-    resume, restore_optim, snapshot, backbone_path):
+    resume, restore_optim, snapshot, backbone_path, lr=None):
     #gpu_id = torch.device(disp_net.device_ids[0])
     gpu_id = 'cpu'
     if resume:
@@ -26,7 +26,10 @@ def model_restore(disp_net, pose_net, optim,
         disp_net.module.load_state_dict(ckpt['disp_net'])
         pose_net.module.load_state_dict(ckpt['pose_net'])
         if restore_optim:
+            assert lr is not None
             optim.load_state_dict(ckpt['optimizer_state_dict'])
+            for g in optim.param_groups:
+                g['lr'] = lr
         start_epoch = ckpt['epoch'] + 1
         start_step = ckpt['global_step']
     else:

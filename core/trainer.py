@@ -15,7 +15,8 @@ def trainer(gpu_id, world_size, config):
     optim, lr_scheduler = build_optimizer(config, disp_net, pose_net)
     start_epoch, start_step = model_restore(disp_net, pose_net, optim, 
                                             config.train.resume, config.train.restore_optim,
-                                            config.train.snapshot, config.train.backbone_path)
+                                            config.train.snapshot, config.train.backbone_path,
+                                           config.train.optim.lr)
     if gpu_id == 0:
         val_dataloader = build_dataset(config, 'val')
         train_summary, val_summary = build_summary_writer(config)
