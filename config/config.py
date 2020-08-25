@@ -29,6 +29,9 @@ config.model.gpu = list(range(len(config.model.gpu)))
 config.train = edict()
 config.train.resume = True
 config.train.restore_optim = True
+# set keep_lr to false if resume training
+# set keep_lr to true if resume training and change initial lr
+config.train.keep_lr = True 
 config.train.snapshot = 'models/baseline_packnet_mp_v1.0/epoch-25.pth'
 config.train.output_path = 'models/baseline_packnet_mp_v1.0_1'
 config.train.display_step = 50
