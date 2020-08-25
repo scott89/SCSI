@@ -16,7 +16,7 @@ def trainer(gpu_id, world_size, config):
     start_epoch, start_step = model_restore(disp_net, pose_net, optim, 
                                             config.train.resume, config.train.restore_optim,
                                             config.train.snapshot, config.train.backbone_path,
-                                           config.train.optim.keep_lr)
+                                           config.train.keep_lr)
     if gpu_id == 0:
         val_dataloader = build_dataset(config, 'val')
         train_summary, val_summary = build_summary_writer(config)
