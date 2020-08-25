@@ -19,7 +19,7 @@ config.dataset.val_batchsize = 1
 config.model = edict()
 config.model.norm = 'BN'
 config.model.syn_norm = True
-config.model.gpu = [2]
+config.model.gpu = [2, 3]
 
 gpu_str = ','.join(map(str, config.model.gpu))
 os.environ['CUDA_VISIBLE_DEVICES'] = gpu_str
@@ -44,7 +44,7 @@ elif config.model.norm == 'GN':
 else:
     raise ValueError('Not Implemented %s'%config.model.norm)
 config.train.optim = edict()
-config.train.optim.lr = 2*1e-5
+config.train.optim.lr = 2*1e-4
 config.train.optim.weight_decay = 1e-5
 config.train.optim.momentum = 0.9
 config.train.optim.lr_decay_factor = 0.5
