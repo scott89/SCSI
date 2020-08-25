@@ -41,9 +41,24 @@ def get_params(net, layer_type, include, ends, exclude=None, requires_grad=True)
 def build_optimizer(config, disp_net, pose_net):
     lr = config.train.optim.lr
     lr_decay_factor = config.train.optim.lr_decay_factor
+    wd = config.train.optim.weight_decay
+    #norm_layer = {'BN': nn.BatchNorm2d, 'GN': nn.GroupNorm}
+    #norm_layer = norm_layer[config.model.norm]
+    norm_layer = [nn.BatchNorm2d, nn.BatchNorm1d, nn.GroupNorm, nn.SyncBatchNorm]
+    disp_norm = get_params(disp_net, norm_layer, '', ['weight', 'bias'])
+    pose_norm = get_params(pose_net, norm_layer, '', ['weight', 'bias'])
+    learnable_layers = [nn.Conv2d, nn.Linear]
+    disp_weight = get_params(disp_net, learnable_layers, '', ['weight'])
+    disp_bias = get_params(disp_net, learnable_layers, '', ['bias'])
+    pose_weight = get_params(pose_net, learnable_layers, '', ['weight'])
+    pose_bias = get_params(pose_net, learnable_layers, '', ['bias'])
     params = [
-        {'params': disp_net.parameters(), 'lr': lr},
-        {'params': pose_net.parameters(), 'lr': lr},
+        {'params': disp_norm[1], 'lr': lr},
+        {'params': pose_norm[1], 'lr': lr},
+        {'params': disp_weight[1], 'lr': lr},
+        {'params': pose_weight[1], 'lr': lr},
+        {'params': disp_bias[1], 'lr': lr},
+        {'params': pose_bias[1], 'lr': lr}
     ]
     optim = torch.optim.Adam(params=params, lr=lr)
     lr_lambda = lambda epoch: lr_decay_factor
