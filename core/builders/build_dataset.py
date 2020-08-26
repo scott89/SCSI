@@ -8,7 +8,7 @@ def worker_init_fn(worker_id):
     np.random.seed(time_seed + worker_id)
 
 
-def build_dataset(config, phase, gpu_id=None, world_size=None):
+def build_dataset(config, phase, gpu_id=None, world_size=None, ddp=True):
     transform = build_transform(config, phase)
     data_path = config.dataset.data_path
     if phase == 'train':
@@ -31,10 +31,13 @@ def build_dataset(config, phase, gpu_id=None, world_size=None):
                                        with_depth = with_depth,
                                        with_pose = with_pose)
     if phase=='train':
-        data_sampler = DistributedSampler(
-            dataset,      
-            num_replicas=world_size,                                                                                                                           
-            rank=gpu_id)  
+        if ddp:
+            data_sampler = DistributedSampler(
+                dataset,      
+                num_replicas=world_size,                                                                                                                           
+                rank=gpu_id)  
+        else:
+            data_sampler = None
         dataset = DataLoader(dataset, 
                              batch_size = batch_size,
                              num_workers = config.dataset.num_workers,

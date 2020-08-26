@@ -7,17 +7,18 @@ from core.losses import calculate_loss
 from core.validator import depth_validator
 
 
-def trainer(gpu_id, world_size, config):
-    dist.init_process_group("nccl", rank=gpu_id, world_size=world_size)
-    torch.cuda.set_device(gpu_id)
-    disp_net, pose_net = build_network(gpu_id, config)
-    train_dataloader = build_dataset(config, 'train', gpu_id, world_size)
+def trainer(gpu_id, world_size, config, ddp=True):
+    if ddp:
+        dist.init_process_group("nccl", rank=gpu_id, world_size=world_size)
+        torch.cuda.set_device(gpu_id)
+    disp_net, pose_net = build_network(gpu_id, config, ddp)
+    train_dataloader = build_dataset(config, 'train', gpu_id, world_size, ddp)
     optim, lr_scheduler = build_optimizer(config, disp_net, pose_net)
     start_epoch, start_step = model_restore(disp_net, pose_net, optim, 
                                             config.train.resume, config.train.restore_optim,
                                             config.train.snapshot, config.train.backbone_path,
                                            config.train.keep_lr)
-    if gpu_id == 0:
+    if gpu_id == 0 or not ddp:
         val_dataloader = build_dataset(config, 'val')
         train_summary, val_summary = build_summary_writer(config)
     global_step = start_step
@@ -34,19 +35,19 @@ def trainer(gpu_id, world_size, config):
                                                                     disps, poses, batch['intrinsics'], True)
             loss_all.backward()
             optim.step()
-            if global_step % config.train.summary_step == 0 and global_step != start_step and gpu_id == 0:
+            if global_step % config.train.summary_step == 0 and global_step != start_step and (gpu_id == 0 or not ddp):
                 write_train_summary_helper(train_summary, batch, disps, loss, global_step)
                 
-            if global_step % config.train.display_step == 0 and global_step != start_step and gpu_id == 0:
+            if global_step % config.train.display_step == 0 and global_step != start_step and (gpu_id == 0 or not ddp):
                 print("Epoch: %d global_step: %d,  batch_id: %d/%d, loss: %f, perc_loss: %f, smooth_loss: %f"%
                       (epoch, global_step, batch_id, len(train_dataloader), loss_all, loss['perc_loss'],  loss['smooth_loss']))
             global_step += 1
 
-        if epoch % config.val.val_epoch == 0 and gpu_id == 0:
+        if epoch % config.val.val_epoch == 0 and (gpu_id == 0 or not ddp):
             depth_validator(disp_net,  val_dataloader, val_summary, epoch, global_step, gpu_id)
         if epoch in config.train.optim.lr_decay_epochs:
             lr_scheduler.step()
-        if epoch % config.train.snapshot_epoch == 0 and gpu_id == 0:
+        if epoch % config.train.snapshot_epoch == 0 and (gpu_id == 0 or not ddp):
             torch.save({
                 'epoch': epoch,
                 'global_step': global_step,
