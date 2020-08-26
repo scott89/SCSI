@@ -30,6 +30,7 @@ def build_dataset(config, phase, gpu_id=None, world_size=None):
                                        with_context = with_context,
                                        with_depth = with_depth,
                                        with_pose = with_pose)
+    data_sampler = None
     if phase=='train':
         data_sampler = DistributedSampler(
             dataset,      
@@ -39,7 +40,7 @@ def build_dataset(config, phase, gpu_id=None, world_size=None):
                              batch_size = batch_size,
                              num_workers = config.dataset.num_workers,
                              pin_memory = True,
-                             shuffle = False,
+                             shuffle = data_sampler is None,
                              sampler=data_sampler
                             )
     else:
@@ -51,4 +52,4 @@ def build_dataset(config, phase, gpu_id=None, world_size=None):
                             )
 
 
-    return dataset
+    return dataset, data_sampler
