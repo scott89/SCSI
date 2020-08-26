@@ -12,19 +12,20 @@ def trainer(gpu_id, world_size, config, ddp=True):
         dist.init_process_group("nccl", rank=gpu_id, world_size=world_size)
         torch.cuda.set_device(gpu_id)
     disp_net, pose_net = build_network(gpu_id, config, ddp)
-    train_dataloader = build_dataset(config, 'train', gpu_id, world_size, ddp)
+    train_dataloader, train_sampler = build_dataset(config, 'train', gpu_id, world_size, ddp)
     optim, lr_scheduler = build_optimizer(config, disp_net, pose_net)
     start_epoch, start_step = model_restore(disp_net, pose_net, optim, 
                                             config.train.resume, config.train.restore_optim,
                                             config.train.snapshot, config.train.backbone_path,
                                            config.train.keep_lr)
     if gpu_id == 0 or not ddp:
-        val_dataloader = build_dataset(config, 'val')
+        val_dataloader, _= build_dataset(config, 'val')
         train_summary, val_summary = build_summary_writer(config)
     global_step = start_step
     for epoch in range(start_epoch, config.train.optim.max_epoch):
         disp_net.train()
         pose_net.train()
+        train_sampler.set_epoch(epoch)
         for batch_id, batch in enumerate(train_dataloader):
             optim.zero_grad()
             batch = sample_to_cuda(batch, gpu_id)
