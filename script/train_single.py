@@ -18,5 +18,5 @@ torch.manual_seed(128)
 
 
 if __name__ == '__main__':
-    trainer(config)
+    trainer(config.model.gpu, 0, config, ddp=False)
 

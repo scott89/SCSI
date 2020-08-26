@@ -4,6 +4,8 @@ import numpy as np
 
 
 def sample_to_cuda(data, gpu_id=0, non_blocking=True):
+    if isinstance(gpu_id, list):
+        gpu_id = gpu_id[0]
     if isinstance(data, str):
         return data
     elif isinstance(data, dict):
