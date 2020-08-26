@@ -25,7 +25,8 @@ def trainer(gpu_id, world_size, config, ddp=True):
     for epoch in range(start_epoch, config.train.optim.max_epoch):
         disp_net.train()
         pose_net.train()
-        train_sampler.set_epoch(epoch)
+        if ddp:
+            train_sampler.set_epoch(epoch)
         for batch_id, batch in enumerate(train_dataloader):
             optim.zero_grad()
             batch = sample_to_cuda(batch, gpu_id)
