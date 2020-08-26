@@ -25,7 +25,7 @@ if __name__ == '__main__':
     ########################
     world_size = len(config.model.gpu)
     mp.spawn(trainer,
-             args=(world_size, config),
+             args=(world_size, config, True),
              nprocs=world_size,
              join=True)
 
