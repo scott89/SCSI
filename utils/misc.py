@@ -20,7 +20,7 @@ def sample_to_cuda(data, gpu_id=0, non_blocking=True):
         raise ValueError('Unknown data type: %s'%(type(data)))
 
 def model_restore(disp_net, pose_net, optim,
-    resume, restore_optim, snapshot, backbone_path, keep_lr=True):
+    resume, restore_optim, snapshot, backbone_path, rank, ddp, keep_lr=True):
     #gpu_id = torch.device(disp_net.device_ids[0])
     gpu_id = 'cpu'
     if resume:
@@ -40,9 +40,22 @@ def model_restore(disp_net, pose_net, optim,
         start_step = ckpt['global_step']
     else:
         ckpt = torch.load(backbone_path, map_location=gpu_id)
-        disp_net.module.encoder.encoder.load_state_dict(ckpt, strict=False)
+     
+        missing_keys, unexpected_keys = disp_net.module.encoder.encoder.load_state_dict(ckpt, strict=False)
+        if rank == 0 or not ddp:
+            print('Loading pretrained_params of disp_net ...')
+            print('missing keys:')
+            print(missing_keys)
+            print('unexpected keys:')
+            print(unexpected_keys)
         ckpt['conv1.weight'] = torch.cat([ckpt['conv1.weight']]*2, 1) / 2
-        pose_net.module.encoder.encoder.load_state_dict(ckpt, strict=False)
+        missing_keysm, unexpected_keys = pose_net.module.encoder.encoder.load_state_dict(ckpt, strict=False)
+        if rank == 0 or not ddp:
+            print('Loading pretrained_params of disp_net ...')
+            print('missing keys:')
+            print(missing_keys)
+            print('unexpected keys:')
+            print(unexpected_keys)
         start_epoch = 0
         start_step = 0
     return start_epoch, start_step

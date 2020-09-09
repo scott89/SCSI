@@ -10,8 +10,8 @@ import torch.nn as nn
 
 
 def build_network(gpu_id, config, ddp=True):
-    disp_net = DepthResNet('50')
-    pose_net = PoseResNet('50')
+    disp_net = DepthResNet('18')
+    pose_net = PoseResNet('18')
     if config.model.norm == 'BN' and config.model.syn_norm and ddp:
         disp_net = nn.SyncBatchNorm.convert_sync_batchnorm(disp_net)
         pose_net = nn.SyncBatchNorm.convert_sync_batchnorm(pose_net)
