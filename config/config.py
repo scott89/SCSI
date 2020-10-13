@@ -6,11 +6,11 @@ config = edict()
 config.dataset = edict()
 config.dataset.name = 'KITTI'
 config.dataset.data_path = '/media/8TB/Research/Data/KITTI_raw'
-config.dataset.num_workers = 8
+config.dataset.num_workers = 12
 config.dataset.train_data_file = 'data_splits/eigen_zhou_files.txt'
 config.dataset.train_transform = edict()
 config.dataset.train_transform.jittering = [0.2, 0.2, 0.2, 0.05]
-config.dataset.train_batchsize = 16
+config.dataset.train_batchsize = 12
 config.dataset.val_data_file = 'data_splits/eigen_test_files.txt'
 config.dataset.val_transform = edict()
 config.dataset.val_batchsize = 1
@@ -18,8 +18,8 @@ config.dataset.val_batchsize = 1
 # Model
 config.model = edict()
 config.model.norm = 'BN'
-config.model.syn_norm = True
-config.model.gpu = [1,7]
+config.model.syn_norm = False
+config.model.gpu = [5]
 
 gpu_str = ','.join(map(str, config.model.gpu))
 os.environ['CUDA_VISIBLE_DEVICES'] = gpu_str
@@ -33,7 +33,7 @@ config.train.restore_optim = False
 # set keep_lr to true if resume training and change initial lr
 config.train.keep_lr = True 
 config.train.snapshot = 'models/baseline_packnet_mp_v1.0/epoch-25.pth'
-config.train.output_path = 'models/baseline_packres18_mp_v1.0.1'
+config.train.output_path = 'models/baseline_packres18_mp_v1.0.2'
 config.train.display_step = 50
 config.train.summary_step = 200
 config.train.snapshot_epoch = 1
@@ -44,7 +44,7 @@ elif config.model.norm == 'GN':
 else:
     raise ValueError('Not Implemented %s'%config.model.norm)
 config.train.optim = edict()
-config.train.optim.lr = 2*1e-4
+config.train.optim.lr = 1*1e-4
 config.train.optim.weight_decay = 0 #1e-5
 config.train.optim.momentum = 0.9
 config.train.optim.lr_decay_factor = 0.1
