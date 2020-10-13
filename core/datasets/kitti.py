@@ -16,7 +16,7 @@ CALIB_FILE = {
     'velo2cam': 'calib_velo_to_cam.txt',
     'imu2velo': 'calib_imu_to_velo.txt',
 }
-
+EXT = 'jpg'
 class KITTI(Dataset):
     def __init__(self, data_path, data_file, data_transform=None,
                 with_context=True, with_depth=False, with_pose=False,
@@ -44,6 +44,7 @@ class KITTI(Dataset):
         # load image path and corresponding depth paths
         for im_path in im_list:
             im_path = join(data_path, im_path.split()[0])
+            im_path = im_path.split('.')[0] + '.' + EXT
             if with_depth:
                 depth_path =  self.get_depth_path(im_path)
                 if depth_path is not None and os.path.exists(depth_path):
@@ -111,7 +112,7 @@ class KITTI(Dataset):
         for cam in FOLDER.values():
             if cam in im_path:
                 depth_path = im_path.replace(cam+'/data', 'proj_depth/velodyne/'+cam)
-                depth_path = depth_path.replace('png', 'npz')
+                depth_path = depth_path.replace(EXT, 'npz')
                 return depth_path
     
     @staticmethod
@@ -205,7 +206,7 @@ class KITTI(Dataset):
         for cam in FOLDER.values():
             # Check for both cameras, if found replace and return file name
             if cam in image_file:
-                return image_file.replace(cam, 'oxts').replace('.png', '.txt')
+                return image_file.replace(cam, 'oxts').replace(EXT, 'txt')
         # Something went wrong (invalid image file)
         raise ValueError('Invalid KITTI path for pose supervision.')
 

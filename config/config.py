@@ -5,7 +5,7 @@ import os
 config = edict()
 config.dataset = edict()
 config.dataset.name = 'KITTI'
-config.dataset.data_path = '/media/8TB/Research/Data/KITTI_raw'
+config.dataset.data_path = '/media/8TB/Research/Data/KITTI_monodepth2'
 config.dataset.num_workers = 12
 config.dataset.train_data_file = 'data_splits/eigen_zhou_files.txt'
 config.dataset.train_transform = edict()
@@ -19,7 +19,7 @@ config.dataset.val_batchsize = 1
 config.model = edict()
 config.model.norm = 'BN'
 config.model.syn_norm = False
-config.model.gpu = [5]
+config.model.gpu = [6]
 
 gpu_str = ','.join(map(str, config.model.gpu))
 os.environ['CUDA_VISIBLE_DEVICES'] = gpu_str
@@ -33,7 +33,7 @@ config.train.restore_optim = False
 # set keep_lr to true if resume training and change initial lr
 config.train.keep_lr = True 
 config.train.snapshot = 'models/baseline_packnet_mp_v1.0/epoch-25.pth'
-config.train.output_path = 'models/baseline_packres18_mp_v1.0.2'
+config.train.output_path = 'models/baseline_packres18_mp_v1.0.2_jpg'
 config.train.display_step = 50
 config.train.summary_step = 200
 config.train.snapshot_epoch = 1
