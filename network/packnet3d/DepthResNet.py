@@ -41,15 +41,15 @@ class DepthResNet(nn.Module):
         Runs the network and returns inverse depth maps
         (4 scales if training and 1 if not).
         """
-        is_flip = random.random() < flip_prob
-        if is_flip:
-            x = torch.flip(x, [3])
+        #is_flip = random.random() < flip_prob
+        #if is_flip:
+        #    x = torch.flip(x, [3])
 
         x = self.encoder(x)
         x = self.decoder(x)
         disps = [x[('disp', i)] for i in range(4)]
         disps = [self.scale_inv_depth(d)[0] for d in disps]
-        if is_flip:
-            disps = [torch.flip(d, [3]) for d in disps]
+        #if is_flip:
+        #    disps = [torch.flip(d, [3]) for d in disps]
         return disps
 ########################################################################################################################

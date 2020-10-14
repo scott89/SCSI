@@ -55,6 +55,22 @@ class Resize(object):
         data['intrinsics'] = intrinsics
         return data
 
+class RandomFlip(object):
+    def __init__(self, flip_prob):
+        self.flip_prob = flip_prob
+
+    def __call__(self, data):
+        flip = random.random() <= self.flip_prob
+        if flip:
+            data['rgb'] = data['rgb'].transpose(Image.FLIP_LEFT_RIGHT)
+            if 'rgb_context' in data:
+                data['rgb_context'] = [rc.transpose(Image.FLIP_LEFT_RIGHT) for rc in data['rgb_context']]
+            if 'depth' in data:
+                data['depth'] = np.fliplr(data['depth'])
+        return data
+
+
+
 class ToTensor(object):
     def __init__(self, data_format, dtype=torch.float32):
         assert data_format in ['RGB', 'BGR']
@@ -116,6 +132,8 @@ class Transform(object):
         transforms = []
         if 'image_shape' in config.keys():
             transforms.append(Resize(config.image_shape))
+        if 'flip_prob' in config.keys():
+            transforms.append(RandomFlip(config.flip_prob))
         transforms.append(Duplicate())
         if 'jittering' in config.keys():
             transforms.append(ColorJittering(*config.jittering))
