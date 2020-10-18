@@ -31,8 +31,10 @@ def trainer(gpu_id, world_size, config, ddp=True):
             optim.zero_grad()
             batch = sample_to_cuda(batch, gpu_id)
             disps = disp_net(batch['rgb'], flip_prob=0.5)
+            disps_context = [disp_net(c) for c in batch['rgb_context']]
             disps = resize(disps, shape=batch['rgb'].shape[2:], mode='bilinear')
-            poses = pose_net(batch['rgb'], batch['rgb_context'])
+            poses = pose_net(batch['rgb'], batch['rgb_context'], disps, disps_context, 
+                            batch['intrinsics'])
             loss_all, loss = calculate_loss(batch['rgb_original'], batch['rgb_context_original'], 
                                                                     disps, poses, batch['intrinsics'], True)
             loss_all.backward()
