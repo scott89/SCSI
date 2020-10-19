@@ -28,15 +28,15 @@ config.model.gpu = list(range(len(config.model.gpu)))
 
 # train
 config.train = edict()
-config.train.resume = False
+config.train.resume = True
 config.train.restore_optim = False
 # set keep_lr to false if resume training
 # set keep_lr to true if resume training and change initial lr
 config.train.keep_lr = True 
-config.train.snapshot = 'models/baseline_packnet_mp_v1.0/epoch-25.pth'
-config.train.output_path = 'models/res18-3d_v1.0'
-config.train.display_step = 50
-config.train.summary_step = 200
+config.train.snapshot = 'models/baseline_packres18_mp_v1.0.2_jpg_flip/epoch-25.pth'
+config.train.output_path = 'models/res18-3d_v1.0_tmp'
+config.train.display_step = 1
+config.train.summary_step = 10
 config.train.snapshot_epoch = 1
 if config.model.norm == 'BN':
     config.train.backbone_path = 'models/resnet18.pth'

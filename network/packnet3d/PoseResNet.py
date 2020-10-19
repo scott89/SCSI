@@ -38,7 +38,7 @@ class PoseResNet(nn.Module):
 
         self.encoder = ResnetEncoder(num_layers=num_layers, pretrained=pretrained, num_input_images=2)
         self.decoder = PoseDecoder(self.encoder.num_ch_enc, num_input_features=1, num_frames_to_predict_for=2)
-        self.scale = 2
+        self.scale = 4
         self.input_shape = [int(i/self.scale) for i in kwargs['input_shape']]
         self.B = kwargs['batch_size']
         self.device = kwargs['device'][0] if isinstance(kwargs['device'], list) else kwargs['device']
@@ -72,6 +72,7 @@ class PoseResNet(nn.Module):
             return pose_mat, pose.view([-1, 2, 6])
         return pose_mat
     def icp_refine(self, pose_mat, target_disp, ref_disp, K):
+        #with torch.no_grad():
         target_depth = self.get_depth(target_disp[0]) # B x 1 x HW
         ref_depth = [self.get_depth(r[0]) for r in ref_disp]
         Kinv = self.get_Kinv(K)
@@ -79,22 +80,30 @@ class PoseResNet(nn.Module):
         coord_3d = Kinv @ coords # B x 3 x HW
         target_3d = coord_3d * target_depth
         target_3d = target_3d.permute([0, 2, 1]) # B x HW x 3
+        target_3d, target_norm = self.normalize_3d(target_3d) # BxHWx3, Bx1x1
         ref_3ds = [coord_3d * rd for rd in ref_depth]
-        ref_3ds = [r.permute([0, 2, 1]) for r in ref_3ds]
+        ref_3ds = [self.normalize_3d(r.permute([0, 2, 1]))[0] for r in ref_3ds]
         Rs = [pose_mat[:,i,:,:3].permute([0, 2, 1]) for i in range(pose_mat.shape[1])]
-        Ts = [pose_mat[:,i,:,3] for i in range(pose_mat.shape[1])]
-        init_poses = [SimilarityTransform(R=R, T=T, s=torch.ones([self.B], device=R.device, dtype=R.dtype)) for R, T in zip(Rs, Ts)]
+        #Ts = [pose_mat[:,i,:,3] for i in range(pose_mat.shape[1])]
+        Ts = [torch.zeros_like(pose_mat[:,i,:,3]) for i in range(pose_mat.shape[1])]
+        init_poses = [SimilarityTransform(R=R, T=T, s=torch.ones([Kinv.shape[0]], device=R.device, dtype=R.dtype)) for R, T in zip(Rs, Ts)]
         refine_poses = []
         for ref_3d, init_pose in zip(ref_3ds, init_poses):
-            t = ops.iterative_closest_point(target_3d, ref_3d, init_transform=init_pose,
-                                            estimate_scale=True, max_iterations=10)
+            t = ops.iterative_closest_point(target_3d, ref_3d,
+                                            estimate_scale=True, max_iterations=1000)
             R = t.RTs.R.permute([0, 2, 1])
-            T = t.RTs.T[:, :, None]
+            T = t.RTs.T[:, :, None] * target_norm/ t.RTs.s[:,None,None]
             refine_poses.append(torch.cat([R, T], 2))
         refine_poses = torch.stack(refine_poses, 1)
         return refine_poses
         
-
+    @staticmethod
+    def normalize_3d(p_3d):
+        # 3d_p: BxNx3
+        norm_3d = torch.sum(p_3d**2, 2, keepdim=True)**0.5 #BxNx1
+        norm_med_3d = torch.median(norm_3d, dim=1, keepdim=True) #Bx1x1
+        p_3d = p_3d / norm_med_3d.values
+        return p_3d, norm_med_3d.values
 
     def get_Kinv(self, K):
         K = K.clone()
