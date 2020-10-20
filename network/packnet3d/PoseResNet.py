@@ -2,6 +2,7 @@
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 #from packnet_sfm.networks.layers.resnet.resnet_encoder import ResnetEncoder
 from network.packnet3d.resnet_encoder import ResnetEncoder
@@ -11,7 +12,8 @@ from core.geometry.pose_utils import pose_vec2mat
 from utils.misc import disp2depth
 from pytorch3d import ops
 from pytorch3d.ops.points_alignment import SimilarityTransform
-from utils.view_synthesis import compute_Kinv
+from utils.view_synthesis import compute_Kinv, project_2d3d, project_3d2d
+
 ########################################################################################################################
 
 class PoseResNet(nn.Module):
@@ -67,15 +69,57 @@ class PoseResNet(nn.Module):
         pose = pose.view(-1, 6)
         pose_mat = pose_vec2mat(pose)
         pose_mat = pose_mat.view(-1, 2, 3, 4)
-        pose_mat = self.icp_refine(pose_mat, target_disp, ref_disp, K)
+        #pose_mat = self.icp_refine(pose_mat, target_disp, ref_disp, K)
+        pose_mat = self.cpa_refine(pose_mat, target_disp, ref_disp, K)
         if return_pose_vec:
             return pose_mat, pose.view([-1, 2, 6])
         return pose_mat
+
+    def cpa_refine(self, pose_mat, target_disp, ref_disp, K):
+        target_depth = self.get_depth(target_disp[0]) # B x 1 x H x W
+        ref_depth = [self.get_depth(r[0]) for r in ref_disp]
+        K, Kinv = self.process_Kinv(K)
+        p3d_target = project_2d3d(target_depth, K) # B x 3 x H x W
+        p2d_trs = [project_3d2d(p3d_target, K, pose_mat[:,i]) for i in range(pose_mat.shape[1])] # B x H x W x 2
+        p3d_refs = [project_2d3d(rd, K) for rd in ref_depth] 
+        p3d_corr_refs = [F.grid_sample(p3, g, 'bilinear') for (p3, g) in zip(p3d_refs, p2d_trs)]
+        masks = [self.get_mask(p2d) for p2d in p2d_trs] # B x H x W
+        # permute and reshape
+        p3d_target = p3d_target.view([K.shape[0], 3, -1])
+        p3d_targets = [pose_mat[:,i,:,:3] @ p3d_target + pose_mat[:,i,:,3:] for i in range(pose_mat.shape[1])]
+        p3d_targets = [p.permute([0,2,1]) for p in p3d_targets]
+        #p3d_target = p3d_target.view([K.shape[0], 3, -1]).permute([0, 2, 1])
+        p3d_corr_refs = [p.view([K.shape[0], 3, -1]).permute([0, 2, 1]) for p in p3d_corr_refs]
+        masks = [m.view(K.shape[0], -1) for m in masks] 
+        refine_poses = []
+        for p3d_target, p3d_corr_ref, mask in zip(p3d_targets, p3d_corr_refs, masks):
+            t = ops.corresponding_points_alignment(p3d_target, p3d_corr_ref, mask, estimate_scale=True)
+            R = t.R.permute([0, 2, 1])
+            T = t.T[:, :, None] / t.s[:,None,None]
+            refine_poses.append(torch.cat([R, T], 2))
+        return refine_poses
+            
+            
+
+    @staticmethod
+    def get_mask(p2d):
+        '''
+        input:
+            p2d: B x H x W x 2
+        output:
+            maks: B x H x W
+        '''
+        mask = (torch.abs(p2d[...,0]) <= 1.0) * (torch.abs(p2d[...,1]) <= 1.0)
+        return mask
+
+
+
+
     def icp_refine(self, pose_mat, target_disp, ref_disp, K):
         #with torch.no_grad():
-        target_depth = self.get_depth(target_disp[0]) # B x 1 x HW
-        ref_depth = [self.get_depth(r[0]) for r in ref_disp]
-        Kinv = self.get_Kinv(K)
+        target_depth = self.get_depth(target_disp[0]).view([K.shape[0], 1, -1]) # B x 1 x HW
+        ref_depth = [self.get_depth(r[0]).view([K.shape[0], 1, -1]) for r in ref_disp]
+        K, Kinv = self.process_Kinv(K)
         coords = self.coords[:Kinv.shape[0]]
         coord_3d = Kinv @ coords # B x 3 x HW
         target_3d = coord_3d * target_depth
@@ -105,17 +149,17 @@ class PoseResNet(nn.Module):
         p_3d = p_3d / norm_med_3d.values
         return p_3d, norm_med_3d.values
 
-    def get_Kinv(self, K):
+    def process_Kinv(self, K):
         K = K.clone()
         K[:, :2] /= self.scale
         Kinv = compute_Kinv(K)
-        return Kinv
+        return K, Kinv
 
     def get_depth(self, disp):
         disp = self.avg_pool(disp)
-        disp = disp2depth(disp)
-        disp = disp.view(self.B, 1, -1)
-        return disp
+        depth = disp2depth(disp)
+        #disp = disp.view(self.B, 1, -1)
+        return depth
 
 ########################################################################################################################
 

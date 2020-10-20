@@ -17,6 +17,14 @@ def compute_Kinv(K):
 
 
 def project_2d3d(depth, K, pose=None):
+    '''
+    input: 
+        depth: B x 1 x H x W
+        K: B x 3 x 3
+        pose: B x 3 x 4
+    output:
+        point_3d: B x 3 x H x W
+    '''
     dtype = depth.dtype
     device = depth.device
     B, C, H, W = depth.shape
@@ -31,10 +39,18 @@ def project_2d3d(depth, K, pose=None):
     points_3d = points_3d.view([B, 3, H, W])
     points_3d = points_3d * depth 
     if pose is not None:
-        points_3d = pose @ points_3d
+        points_3d = pose[:, :3, :3] @ points_3d.view([B, C, -1]) + pose[:, :3, 3:]
     return points_3d
 
 def project_3d2d(points_3d, K, pose=None):
+    '''
+    input: 
+        point_3d: B x 3 x H x W
+        K: B x 3 x 3
+        pose: B x 3 x 4
+    output:
+        coords: B x H x W x 2: normalized to [-1,1]
+    '''
     B, C, H, W = points_3d.shape
     if pose is not None:
         points_3d = pose[:, :3, :3] @ points_3d.view([B, C, -1]) + pose[:, :3, 3:]
@@ -46,7 +62,6 @@ def project_3d2d(points_3d, K, pose=None):
     x_norm = 2 * (xs / zs) / (W - 1) - 1 # B x HW
     y_norm = 2 * (ys / zs) / (H - 1) - 1
     coords = torch.stack([x_norm, y_norm], dim=2).view([B, H, W, 2])
-
     return coords
 
 def view_synthesis(img_ref, depth, pose, K, 
