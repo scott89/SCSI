@@ -70,7 +70,7 @@ class PoseResNet(nn.Module):
         pose_mat = pose_vec2mat(pose)
         pose_mat = pose_mat.view(-1, 2, 3, 4)
         #pose_mat = self.icp_refine(pose_mat, target_disp, ref_disp, K)
-        pose_mat = self.cpa_refine(pose_mat, target_disp, ref_disp, K)
+        #pose_mat = self.cpa_refine(pose_mat, target_disp, ref_disp, K)
         if return_pose_vec:
             return pose_mat, pose.view([-1, 2, 6])
         return pose_mat
@@ -97,6 +97,7 @@ class PoseResNet(nn.Module):
             R = t.R.permute([0, 2, 1])
             T = t.T[:, :, None] / t.s[:,None,None]
             refine_poses.append(torch.cat([R, T], 2))
+        refine_poses = torch.stack(refine_poses, 1)
         return refine_poses
             
             

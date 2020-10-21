@@ -33,10 +33,11 @@ def trainer(gpu_id, world_size, config, ddp=True):
             disps = disp_net(batch['rgb'], flip_prob=0.5)
             disps_context = [disp_net(c) for c in batch['rgb_context']]
             disps = resize(disps, shape=batch['rgb'].shape[2:], mode='bilinear')
+            disps_context = resize(disps_context, shape=batch['rgb'].shape[2:], mode='bilinear')
             poses = pose_net(batch['rgb'], batch['rgb_context'], disps, disps_context, 
                             batch['intrinsics'])
             loss_all, loss = calculate_loss(batch['rgb_original'], batch['rgb_context_original'], 
-                                                                    disps, poses, batch['intrinsics'], True)
+                                                                    disps, disps_context, poses, batch['intrinsics'], True)
             loss_all.backward()
             optim.step()
             if global_step % config.train.summary_step == 0 and global_step != start_step and (gpu_id == 0 or not ddp):
