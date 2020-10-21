@@ -133,7 +133,7 @@ def compute_loss_3d(depth, depth_ref, pose, K, Kinv, valid_mask, loss_weight, mo
     
             
 
-def calculate_loss(img, img_ref, disp, disp_ref, pose, K, return_syn=False, smooth_loss_weight=0.001, ssim_loss_weight=0.85, loss_3d_weight=0.1):
+def calculate_loss(img, img_ref, disp, disp_ref, pose, K, return_syn=False, smooth_loss_weight=0.001, ssim_loss_weight=0.85, loss_3d_weight=0.05):
     depth = disp2depth(disp)
     depth_ref = disp2depth(disp_ref)
     Kinv = compute_Kinv(K)
