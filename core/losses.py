@@ -114,7 +114,8 @@ def compute_loss_3d(depth, depth_ref, pose, K, Kinv, valid_mask, loss_weight, mo
         for p2d_t_r_scale, p3d_r_scale, mask_scale in zip(p2d_t_r_view, p3d_r_view, mask_view):
             mask_scale *= (torch.abs(p2d_t_r_scale[...,0]) <= 1) * (torch.abs(p2d_t_r_scale[...,1]) <= 1) 
             p3d_ref_warp_scale = F.grid_sample(p3d_r_scale, p2d_t_r_scale, mode=mode, padding_mode=padding_mode, align_corners=align_corners)
-            t = ops.corresponding_points_alignment(p3d_r_scale.view(B,3,-1).permute([0,2,1]), p3d_ref_warp_scale.view(B, 3, -1).permute([0,2,1]), mask_scale.view(B, -1))
+            t = ops.corresponding_points_alignment(p3d_r_scale.view(B,3,-1).permute([0,2,1]), 
+                                                   p3d_ref_warp_scale.view(B, 3, -1).permute([0,2,1]), mask_scale.view(B, -1), estimate_scale=True)
             p3d_ref_warp_view.append(p3d_ref_warp_scale)
             trans_view.append(t)
         trans.append(trans_view)
@@ -133,7 +134,7 @@ def compute_loss_3d(depth, depth_ref, pose, K, Kinv, valid_mask, loss_weight, mo
     
             
 
-def calculate_loss(img, img_ref, disp, disp_ref, pose, K, return_syn=False, smooth_loss_weight=0.001, ssim_loss_weight=0.85, loss_3d_weight=0.005):
+def calculate_loss(img, img_ref, disp, disp_ref, pose, K, return_syn=False, smooth_loss_weight=0.001, ssim_loss_weight=0.85, loss_3d_weight=0.01):
     depth = disp2depth(disp)
     depth_ref = disp2depth(disp_ref)
     Kinv = compute_Kinv(K)
