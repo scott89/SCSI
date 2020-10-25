@@ -99,22 +99,22 @@ def smoothness_loss(disp, image, smooth_loss_weight):
     smoothness = sum([(s_x.abs().mean() + s_y.abs().mean())/2.0**i for i, (s_x, s_y) in enumerate(smoothness)]) / len(disp)
     return smoothness * smooth_loss_weight
 
-def compute_loss_3d(depth, depth_ref, pose, K, Kinv, valid_mask, loss_weight, mode='bilinear', padding_mode='zeros', align_corners=True):
+def compute_loss_3d(depth, depth_ref, scale, scale_ref, pose, K, Kinv, valid_mask, loss_weight, mode='bilinear', padding_mode='zeros', align_corners=True):
     num_scale = len(depth)
     num_view = len(depth_ref)
     B, _, H, W = depth[0].shape
-    p3d = [[project_2d3d(d, Kinv, pose[:,v]) for d in depth] for v in range(num_view)]
+    p3d = [[project_2d3d(d, Kinv) for d in depth] for v in range(num_view)]
     p3d_ref = [[project_2d3d(dr, Kinv) for dr in depth_ref[v]] for v in range(num_view)]
-    p2d_target_ref = [[project_3d2d(p, K) for p in p3d[v]] for v in range(num_view)]
+    p2d_target_ref = [[project_3d2d(p, K, pose[:, v]) for p in p3d[v]] for v in range(num_view)]
     p3d_ref_warp = []
     trans = []
-    for p2d_t_r_view, p3d_r_view, mask_view in zip(p2d_target_ref, p3d_ref, valid_mask):
+    for p3d_view, p2d_t_r_view, p3d_r_view, mask_view in zip(p3d, p2d_target_ref, p3d_ref, valid_mask):
         p3d_ref_warp_view = []
         trans_view = []
-        for p2d_t_r_scale, p3d_r_scale, mask_scale in zip(p2d_t_r_view, p3d_r_view, mask_view):
+        for p3d_scale, p2d_t_r_scale, p3d_r_scale, mask_scale in zip(p3d_view, p2d_t_r_view, p3d_r_view, mask_view):
             mask_scale *= (torch.abs(p2d_t_r_scale[...,0]) <= 1) * (torch.abs(p2d_t_r_scale[...,1]) <= 1) 
             p3d_ref_warp_scale = F.grid_sample(p3d_r_scale, p2d_t_r_scale, mode=mode, padding_mode=padding_mode, align_corners=align_corners)
-            t = ops.corresponding_points_alignment(p3d_r_scale.view(B,3,-1).permute([0,2,1]), 
+            t = ops.corresponding_points_alignment(p3d_scale.view(B,3,-1).permute([0,2,1]), 
                                                    p3d_ref_warp_scale.view(B, 3, -1).permute([0,2,1]), mask_scale.view(B, -1), estimate_scale=True)
             p3d_ref_warp_view.append(p3d_ref_warp_scale)
             trans_view.append(t)
@@ -123,29 +123,53 @@ def compute_loss_3d(depth, depth_ref, pose, K, Kinv, valid_mask, loss_weight, mo
     R = [torch.cat([t.R for t in t_s], 0) for t_s in trans] #[2B x 3 x 3] x num_scale
     T = [torch.cat([t.T for t in t_s], 0) for t_s in trans] #[2B x 3] x num_scale
     S = [torch.cat([t.s for t in t_s], 0) for t_s in trans] #[2B] x num_scale
-    R_gt = torch.eye(3,3, device=depth[0].device).repeat([num_view*B, 1, 1]) 
-    T_gt = torch.zeros_like(T[0])
-    S_gt = torch.ones_like(S[0])
-    R_loss = sum([torch.abs(r-R_gt).mean() for r in R]) / num_scale
-    T_loss = sum([torch.abs(t-T_gt).mean() for t in T]) / num_scale
-    s_loss = sum([torch.abs(s-S_gt).mean() for s in S]) / num_scale
+    R = torch.cat(R, 0)
+    R = R.permute([0,2,1])
+    T = torch.cat(T, 0) # [2Bxnum_scale x 3]
+    S = torch.cat(S, 0)
+    R_pre = torch.cat([pose[:,v,:,:3] for v in range(num_view)], 0)
+    R_pre = R_pre.repeat([num_scale, 1, 1])
+    T_pre = torch.cat([pose[:,v,:,3] for v in range(num_view)], 0)
+    T_pre = T_pre.repeat([num_scale, 1, 1])
+    scale_pre = torch.squeeze(scale).repeat([num_view*num_scale])
+    scale_pre_ref = torch.squeeze(torch.cat(scale_ref, 0)).repeat([num_scale])
+    R_loss = torch.abs(R-R_pre).mean()
+    T_loss = torch.abs(T - (S/scale_pre)[...,None] * T_pre).mean()
+    s_loss = torch.abs(scale_pre - S*scale_pre_ref).mean()
     loss_3d = R_loss + T_loss + s_loss
     return loss_3d * loss_weight
+    #R_gt = torch.eye(3,3, device=depth[0].device).repeat([num_view*B, 1, 1]) 
+    #T_gt = torch.zeros_like(T[0])
+    #S_gt = torch.ones_like(S[0])
+    #scale = torch.squeeze(scale).repeat([num_view])
+    #scale_ref = torch.squeeze(torch.cat(scale_ref, 0))
+    #S = torch.cat(S, 0)
+    #R_loss = sum([torch.abs(r-R_gt).mean() for r in R]) / num_scale
+    #T_loss = sum([torch.abs(t-T_gt).mean() for t in T]) / num_scale
+    #s_loss = sum([torch.abs(s-S_gt).mean() for s in S]) / num_scale
+    #s_loss = torch.abs(S*scale - scale_ref).mean()
+    #
+    #loss_3d = R_loss + T_loss + s_loss
+    #return loss_3d * loss_weight
     
             
 
-def calculate_loss(img, img_ref, disp, disp_ref, pose, K, return_syn=False, smooth_loss_weight=0.001, ssim_loss_weight=0.85, loss_3d_weight=0.01):
-    depth = disp2depth(disp)
-    depth_ref = disp2depth(disp_ref)
+def calculate_loss(img, img_context, disps, depths, depth_full, scale,
+                   depth_full_context, scale_context,
+                   pose, K, return_syn=False, smooth_loss_weight=0.001, ssim_loss_weight=0.85, loss_3d_weight=0.01):
     Kinv = compute_Kinv(K)
-    loss, valid_mask = perceptual_loss(img, img_ref, depth, pose, K, Kinv, return_syn, ssim_loss_weight)
+    loss, valid_mask = perceptual_loss(img, img_context, depths, pose, K, Kinv, return_syn, ssim_loss_weight)
     loss_all = loss['perc_loss']
     if loss_3d_weight > 0:
-        loss_3d = compute_loss_3d(depth, depth_ref, pose, K, Kinv, valid_mask, loss_3d_weight)
+        depth_full = [depth_full]
+        depth_full_context = [[d] for d in depth_full_context]
+        #scale = [scale]
+        #scale_context = [[s] for s in scale_context]
+        loss_3d = compute_loss_3d(depth_full, depth_full_context, scale, scale_context, pose, K, Kinv, valid_mask, loss_3d_weight)
         loss_all += loss_3d
         loss.update({'loss_3d': loss_3d})
     if smooth_loss_weight > 0:
-        smooth_loss = smoothness_loss(disp, img, smooth_loss_weight)
+        smooth_loss = smoothness_loss(disps, img, smooth_loss_weight)
         loss_all += smooth_loss
         loss.update({'smooth_loss': smooth_loss})
     loss.update({'loss_all': loss_all})

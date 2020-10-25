@@ -6,6 +6,7 @@ from functools import partial
 from network.packnet3d.resnet_encoder import ResnetEncoder
 from network.packnet3d.depth_decoder import DepthDecoder
 from network.disp_decoder import disp_to_depth
+from network.disp_scale import ScaleDecoder
 import random
 
 ########################################################################################################################
@@ -34,7 +35,8 @@ class DepthResNet(nn.Module):
 
         self.encoder = ResnetEncoder(num_layers=num_layers, pretrained=pretrained)
         self.decoder = DepthDecoder(num_ch_enc=self.encoder.num_ch_enc)
-        self.scale_inv_depth = partial(disp_to_depth, min_depth=0.1, max_depth=100.0)
+        self.scale_decoder = ScaleDecoder(self.encoder.num_ch_enc[-1])
+        self.scale_inv_depth = partial(disp_to_depth, min_depth=0.5, max_depth=100.0)
 
     def forward(self, x, flip_prob=0.0):
         """
@@ -45,11 +47,14 @@ class DepthResNet(nn.Module):
         #if is_flip:
         #    x = torch.flip(x, [3])
 
-        x = self.encoder(x)
-        x = self.decoder(x)
+        fea = self.encoder(x)
+        x = self.decoder(fea)
         disps = [x[('disp', i)] for i in range(4)]
+        scale = self.scale_decoder(fea[-1])
         disps = [self.scale_inv_depth(d)[0] for d in disps]
+        depth_full = 1.0 / disps[0]
+        depth = [scale / disp for disp in disps]
         #if is_flip:
         #    disps = [torch.flip(d, [3]) for d in disps]
-        return disps
+        return disps, depth, depth_full, scale
 ########################################################################################################################

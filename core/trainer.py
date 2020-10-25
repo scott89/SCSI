@@ -30,14 +30,19 @@ def trainer(gpu_id, world_size, config, ddp=True):
         for batch_id, batch in enumerate(train_dataloader):
             optim.zero_grad()
             batch = sample_to_cuda(batch, gpu_id)
-            disps = disp_net(batch['rgb'], flip_prob=0.5)
+            disps, depths, depth_full, scale = disp_net(batch['rgb'], flip_prob=0.5)
             disps_context = [disp_net(c) for c in batch['rgb_context']]
+            disps_context, depths_context, depth_full_context, scale_context = list(zip(*disps_context))
             disps = resize(disps, shape=batch['rgb'].shape[2:], mode='bilinear')
-            disps_context = resize(disps_context, shape=batch['rgb'].shape[2:], mode='bilinear')
+            depths = resize(depths, shape=batch['rgb'].shape[2:], mode='bilinear')
+            #disps_context = resize(disps_context, shape=batch['rgb'].shape[2:], mode='bilinear')
+            #depths_context = resize(depths_context, shape=batch['rgb'].shape[2:], mode='bilinear')
             poses = pose_net(batch['rgb'], batch['rgb_context'], disps, disps_context, 
                             batch['intrinsics'])
             loss_all, loss = calculate_loss(batch['rgb_original'], batch['rgb_context_original'], 
-                                                                    disps, disps_context, poses, batch['intrinsics'], True)
+                                            disps, depths, depth_full, scale, 
+                                            depth_full_context, scale_context,
+                                            poses, batch['intrinsics'], True)
             loss_all.backward()
             optim.step()
             if global_step % config.train.summary_step == 0 and global_step != start_step and (gpu_id == 0 or not ddp):
