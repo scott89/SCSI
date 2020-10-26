@@ -52,9 +52,8 @@ class DepthResNet(nn.Module):
         disps = [x[('disp', i)] for i in range(4)]
         scale = self.scale_decoder(fea[-1])
         disps = [self.scale_inv_depth(d)[0] for d in disps]
-        depth_full = 1.0 / disps[0]
         depth = [scale / disp for disp in disps]
         #if is_flip:
         #    disps = [torch.flip(d, [3]) for d in disps]
-        return disps, depth, depth_full, scale
+        return disps, depth, scale
 ########################################################################################################################

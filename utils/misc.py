@@ -67,7 +67,7 @@ def disp2depth(disp):
         return 1.0 / disp.clamp(min=1e-6)
 
 def resize(x, shape, mode='bilinear', align_corners=False):
-    if isinstance(x, list):
+    if isinstance(x, list) or isinstance(x, tuple):
         return [resize(i, shape, mode, align_corners) for i in x]
     else:
         return F.interpolate(x, shape, mode=mode, align_corners=align_corners)
