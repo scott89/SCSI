@@ -140,14 +140,14 @@ def compute_loss_3d(depth, depth_ref, scale, scale_ref, pose, K, Kinv, valid_mas
     #s_loss = sum([torch.abs(s-S_gt).mean() for s in S]) / num_scale
     #s_loss = torch.abs(S*scale - scale_ref).mean()
     #
-    loss_3d = R_loss + T_loss + 0.5*s_loss
+    loss_3d = R_loss + T_loss + s_loss
     return loss_3d * loss_weight
     
             
 
 def calculate_loss(img, img_context, disps, depths, scale,
                    depths_context, scale_context,
-                   pose, K, return_syn=False, smooth_loss_weight=0.001, ssim_loss_weight=0.85, loss_3d_weight=0.01):
+                   pose, K, return_syn=False, smooth_loss_weight=0.001, ssim_loss_weight=0.85, loss_3d_weight=0.05):
     Kinv = compute_Kinv(K)
     loss, valid_mask = perceptual_loss(img, img_context, depths, pose, K, Kinv, return_syn, ssim_loss_weight)
     loss_all = loss['perc_loss']
