@@ -31,10 +31,11 @@ class ColorJittering(object):
         return data
 
 class Resize(object):
-    def __init__(self, image_shape, interpolation=Image.ANTIALIAS):
+    def __init__(self, image_shape, keep_depth_size=False, interpolation=Image.ANTIALIAS):
         self.image_shape = image_shape
         self.interpolation = interpolation
         self.resize = T.Resize(image_shape, interpolation=interpolation)
+        self.keep_depth_size = keep_depth_size
 
     def __call__(self, data):
         w_ori, h_ori = data['rgb'].size
@@ -45,7 +46,7 @@ class Resize(object):
             data['rgb_context'] = [self.resize(r) 
                                    for r in data['rgb_context']]
         # resize depth
-        if 'depth' in data:
+        if 'depth' in data and not self.keep_depth_size:
             data['depth'] = cv2.resize(data['depth'], 
                                    tuple(self.image_shape[-1::-1]), interpolation=cv2.INTER_NEAREST)
         # resize intrinsics
@@ -131,7 +132,7 @@ class Transform(object):
     def __init__(self, config):
         transforms = []
         if 'image_shape' in config.keys():
-            transforms.append(Resize(config.image_shape))
+            transforms.append(Resize(config.image_shape, keep_depth_size=config.keep_depth_size))
         if 'flip_prob' in config.keys():
             transforms.append(RandomFlip(config.flip_prob))
         transforms.append(Duplicate())
