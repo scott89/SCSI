@@ -11,6 +11,17 @@ import random
 
 ########################################################################################################################
 
+def normalization(d, mode):
+    if mode == 'mean':
+        m = torch.mean(d, [2,3], keepdim=True)
+    elif mode == 'median':
+        m = torch.median(d.view([d.shape[0], -1]), 1, keepdim=True)
+        m = m[..., None, None]
+    else:
+        raise ValueError('Unknown normalization mode: %s'%mode)
+    return d / m.clamp(1e-6)
+
+
 class DepthResNet(nn.Module):
     """
     Inverse depth network based on the ResNet architecture.
@@ -52,7 +63,8 @@ class DepthResNet(nn.Module):
         disps = [x[('disp', i)] for i in range(4)]
         scale = self.scale_decoder(fea[-1])
         disps = [self.scale_inv_depth(d)[0] for d in disps]
-        depth = [scale / disp for disp in disps]
+        depth_norm = [normalization(1.0/d, mode='mean') for d in disps]
+        depth = [scale * d for d in depth_norm]
         #if is_flip:
         #    disps = [torch.flip(d, [3]) for d in disps]
         return disps, depth, scale
