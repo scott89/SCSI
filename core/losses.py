@@ -112,7 +112,7 @@ def compute_loss_3d(depth, depth_ref, scale, scale_ref, pose, K, Kinv, valid_mas
         p3d_ref_warp_view = []
         trans_view = []
         for p3d_scale, p2d_t_r_scale, p3d_r_scale, mask_scale in zip(p3d_view, p2d_t_r_view, p3d_r_view, mask_view):
-            #mask_scale *= (torch.abs(p2d_t_r_scale[...,0]) <= 1) * (torch.abs(p2d_t_r_scale[...,1]) <= 1) 
+            mask_scale *= (torch.abs(p2d_t_r_scale[...,0]) <= 1) * (torch.abs(p2d_t_r_scale[...,1]) <= 1) 
             p3d_ref_warp_scale = F.grid_sample(p3d_r_scale, p2d_t_r_scale, mode=mode, padding_mode=padding_mode, align_corners=align_corners)
             t = ops.corresponding_points_alignment(p3d_scale.view(B,3,-1).permute([0,2,1]), 
                                                    p3d_ref_warp_scale.view(B, 3, -1).permute([0,2,1]), mask_scale.view(B, -1), estimate_scale=True)

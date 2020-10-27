@@ -39,10 +39,11 @@ def trainer(gpu_id, world_size, config, ddp=True):
             depths_context = resize(depths_context, shape=batch['rgb'].shape[2:], mode='bilinear')
             poses = pose_net(batch['rgb'], batch['rgb_context'], disps, disps_context, 
                             batch['intrinsics'])
+            loss_3d_weight = 0 if global_step < 2000 else 0.005
             loss_all, loss = calculate_loss(batch['rgb_original'], batch['rgb_context_original'], 
                                             disps, depths, scale, 
                                             depths_context, scale_context,
-                                            poses, batch['intrinsics'], True)
+                                            poses, batch['intrinsics'], True, loss_3d_weight=loss_3d_weight)
             loss_all.backward()
             optim.step()
             if global_step % config.train.summary_step == 0 and global_step != start_step and (gpu_id == 0 or not ddp):

@@ -3,7 +3,9 @@ import torch.nn.functional as F
 from utils.misc import sample_to_cuda, disp2depth, write_val_summary_helper
 from collections import OrderedDict
 
-EVAL_MODES = ['depth', 'depth_pp', 'detph_gt', 'depth_pp_gt']
+#EVAL_MODES = ['depth', 'depth_pp', 'detph_gt', 'depth_pp_gt']
+EVAL_MODES = ['depth_pp_gt']
+
 METRICS = ['abs_rel', 'sq_rel', 'rmse', 'rmse_log', 'a1', 'a2', 'a3']
 
 def post_process_inv_depth(disp, disp_flipped):
