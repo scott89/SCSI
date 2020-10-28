@@ -13,11 +13,13 @@ class ScaleDecoder(nn.Module):
         self.deconv3 = nn.Conv2d(256, 256, 3, padding=1, bias=True)
         self.deconv4 = nn.Conv2d(256, 1, 3, padding=1, bias=True)
         self.activ = nn.ELU(inplace=True)
+        self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
         deconv1 = self.activ(self.deconv1(x))
         deconv2 = self.activ(self.deconv2(deconv1))
         deconv3 = self.activ(self.deconv3(deconv2))
         deconv4 = self.deconv4(deconv3)
-        scale = 23 * deconv4.mean(3, keepdim=True).mean(2, keepdim=True)
+        scale = deconv4.mean(3, keepdim=True).mean(2, keepdim=True)
+        scale = 2 * self.sigmoid(scale)
         return scale
