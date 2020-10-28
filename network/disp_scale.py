@@ -19,5 +19,5 @@ class ScaleDecoder(nn.Module):
         deconv2 = self.activ(self.deconv2(deconv1))
         deconv3 = self.activ(self.deconv3(deconv2))
         deconv4 = self.deconv4(deconv3)
-        scale = deconv4.mean(3, keepdim=True).mean(2, keepdim=True)
+        scale = 23 * deconv4.mean(3, keepdim=True).mean(2, keepdim=True)
         return scale
