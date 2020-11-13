@@ -132,7 +132,7 @@ class KITTI(Dataset):
     
         # get forward context
         forward_context_paths = []
-        for i in range(1, backward_context+1):
+        for i in range(1, forward_context+1):
             f_id = c_id + i * stride
             f_path = join(parent_folder, str(f_id).zfill(len(base_name)) + ext)
             if os.path.exists(f_path):
