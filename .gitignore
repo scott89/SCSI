@@ -9,3 +9,6 @@ models
 logs
 *swo
 cscope*
+docker
+pose_res
+depth_res
